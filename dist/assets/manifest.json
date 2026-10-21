@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "generatedMedia": false,
+  "mode": "editable-still-image-story",
+  "description": "No supplied property photographs or video yet. Inline vector linework and CSS colour fields are clearly labelled editable photo spaces, not depictions of actual properties.",
+  "activePinnedTravelVh": 400,
+  "stageHeight": "100svh minus sticky navigation",
+  "sequence": { "frameCount": 0, "dimensions": null, "filenamePattern": null, "posterPath": null, "reason": "User requested photo placeholders and deferred media supply. No video or raster frame sequence generated." },
+  "beats": [
+    { "id": "arrive", "startVh": 0, "endVh": 110, "slot": "hero", "motion": "gentle still-image scale" },
+    { "id": "settle", "startVh": 110, "endVh": 145, "motion": "crossfade and translate" },
+    { "id": "gather", "startVh": 145, "endVh": 255, "slot": "kitchen", "motion": "gentle scale then still hold" },
+    { "id": "change-pace", "startVh": 255, "endVh": 290, "motion": "crossfade and translate" },
+    { "id": "terrace", "startVh": 290, "endVh": 400, "slot": "terrace", "motion": "gentle scale then still hold" }
+  ],
+  "slots": ["hero", "kitchen", "terrace", "farmhouse", "city", "pool", "dining", "moments"],
+  "brand": { "logoPath": null, "status": "Awaiting official logo. Temporary HTML wordmark and generic V favicon are code-native placeholders." },
+  "placeholderSource": "shared.js: illustration() and styles.css",
+  "imageFailureFallback": "Inline vector photo placeholder; no network asset required."
+}

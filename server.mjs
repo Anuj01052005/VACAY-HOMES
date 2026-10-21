@@ -1,0 +1,10 @@
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=path.join(path.dirname(fileURLToPath(import.meta.url)),'dist');
+const port=Number(process.env.PORT || 4173);
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
+const server=http.createServer((req,res)=>{let url;try{url=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}catch{res.writeHead(400).end();return;}const target=path.resolve(root,'.'+url+(url.endsWith('/')?'index.html':''));if(!target.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(target,(err,data)=>{if(err){res.writeHead(404,{'Content-Type':'text/plain'}).end('Not found');return;}res.writeHead(200,{'Content-Type':types[path.extname(target)] || 'application/octet-stream','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'});res.end(data);});});
+server.listen(port,'127.0.0.1',()=>console.log(`Vacay Homes is ready at http://127.0.0.1:${port}\nEditor: http://127.0.0.1:${port}/studio.html\nStyle tile: http://127.0.0.1:${port}/style-tile.html`));
+process.on('SIGINT',()=>server.close(()=>process.exit(0)));

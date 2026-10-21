@@ -1,0 +1,1 @@
+(() => {const V=window.Vacay,c=window.VACAY_CONTENT;document.querySelector('#tile-image').append(V.photo(c.images.hero));if(V.safeImage(c.brand.logo)){const img=new Image();img.src=c.brand.logo;img.alt=c.brand.logoAlt;document.querySelector('#tile-logo').replaceChildren(img);}})();

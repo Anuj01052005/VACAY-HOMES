@@ -1,0 +1,7 @@
+{
+  "name": "vacay-homes-scroll-story",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Editable Vacay Homes website with native scroll storytelling and a local content studio.",
+  "scripts": { "start": "node server.mjs", "check": "node check.mjs", "build": "node check.mjs" }
+}
