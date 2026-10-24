@@ -1,0 +1,55 @@
+{
+  "original": "DJI_20250303173018_0027_D.MP4.mp4",
+  "originalBytes": 107280382,
+  "sourcePhotoMap": {
+    "pool": "IMG_9776.jpeg",
+    "living": "IMG_9772.jpeg",
+    "bedroom": "IMG_9780.jpeg",
+    "gazebo": "IMG_9770.jpeg"
+  },
+  "clips": [
+    {
+      "name": "arrival",
+      "sourceStart": 40,
+      "seconds": 10,
+      "reversed": true
+    },
+    {
+      "name": "pool",
+      "sourceStart": 16,
+      "seconds": 3.5,
+      "reversed": false
+    },
+    {
+      "name": "gazebo",
+      "sourceStart": 22,
+      "seconds": 3.5,
+      "reversed": false
+    }
+  ],
+  "entrance": "AI morning lighting edit of IMG_9781.jpeg; original retained in source-reference. No daytime footage exists for entrance.",
+  "files": {
+    "arrival-1440.mp4": 2361419,
+    "arrival-720.mp4": 848995,
+    "arrival-poster-1440.jpg": 286126,
+    "arrival-poster-720.jpg": 81938,
+    "bedroom-1600.webp": 122120,
+    "bedroom-800.webp": 45872,
+    "bodoni-regular.ttf": 44752,
+    "dm-sans-medium.ttf": 48308,
+    "dm-sans-regular.ttf": 48280,
+    "entrance-morning-1600.webp": 403574,
+    "entrance-morning-800.webp": 119928,
+    "favicon.svg": 179,
+    "gazebo-1440.mp4": 930210,
+    "gazebo-1600.webp": 264576,
+    "gazebo-720.mp4": 303039,
+    "gazebo-800.webp": 100674,
+    "living-1600.webp": 101388,
+    "living-800.webp": 43936,
+    "pool-1440.mp4": 898407,
+    "pool-1600.webp": 270128,
+    "pool-720.mp4": 331982,
+    "pool-800.webp": 100662
+  }
+}
