@@ -1,0 +1,95 @@
+.vinyl-preview, .vinyl-tour {
+  --vinyl-night:#0a0c15;--vinyl-blue:rgba(38,75,135,.54);--vinyl-plum:rgba(112,47,115,.46);--vinyl-rose:rgba(146,66,98,.36);
+  --vinyl-muted:#bbb8c6;--vinyl-cream:#eee6da;--vinyl-cta:rgba(16,22,34,.78);--vinyl-shadow:rgba(0,0,0,.4);
+  --vinyl-stage-width:760px;--vinyl-title:clamp(44px,7vw,78px);--vinyl-copy:clamp(11px,2.8vw,13px);--vinyl-stage-gap:clamp(8px,2vw,24px);
+  min-height:100svh;background:var(--vinyl-night);isolation:isolate;overflow-x:clip;
+}
+.vinyl-preview-nav {position:absolute;top:var(--edge);left:var(--edge);right:var(--edge);z-index:3;display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);font-size:11px;color:var(--vinyl-muted)}
+.vinyl-preview-nav .glass-action {font-size:11px;min-height:var(--touch)}
+.vinyl-preview-nav>span {padding-right:var(--space-sm)}
+.vinyl-tour {position:relative;isolation:isolate;min-height:100svh;padding:110px var(--edge) 40px;display:flex;align-items:center;flex-direction:column;overflow:hidden;color:var(--vinyl-cream)}
+.vinyl-aurora {position:absolute;inset:-15%;z-index:-1;background:radial-gradient(ellipse at 20% 30%,var(--vinyl-blue),transparent 60%),radial-gradient(ellipse at 90% 55%,var(--vinyl-plum),transparent 57%),radial-gradient(ellipse at 45% 90%,var(--vinyl-rose),transparent 58%);animation:vinyl-sky 36s ease-in-out infinite alternate;pointer-events:none}
+.vinyl-intro {text-align:center;position:relative;z-index:1}
+.vinyl-eyebrow {font:400 var(--vinyl-copy)/1.5 var(--font-interface);color:var(--vinyl-muted);margin:0 0 var(--space-md)}
+.vinyl-title {position:static;margin:0;text-align:center;font:400 var(--vinyl-title)/1.02 var(--font-display);letter-spacing:-.035em;color:var(--vinyl-cream)}
+.vinyl-title em {font-style:italic;font-weight:400}
+.vinyl-invitation {position:relative;isolation:isolate;overflow:hidden;border-radius:var(--pill);min-height:48px;padding:14px 23px;margin-top:28px;font:400 var(--vinyl-copy)/1.5 var(--font-interface);color:var(--foreground);background:var(--vinyl-cta);max-width:100%}
+.vinyl-invitation-light {position:absolute;inset:-100%;z-index:-1;background:conic-gradient(from 80deg,var(--vinyl-blue),var(--vinyl-plum),var(--vinyl-rose),var(--vinyl-blue));filter:blur(14px);animation:vinyl-wave 16s linear infinite;opacity:.85}
+.vinyl-invitation:disabled {cursor:default}
+.vinyl-stage {width:100%;max-width:var(--vinyl-stage-width);aspect-ratio:800/560;position:relative;margin-top:var(--vinyl-stage-gap)}
+.vinyl-trigger {position:absolute;inset:0;width:100%;height:100%;display:block;padding:0;border-radius:var(--gallery-radius);touch-action:manipulation}
+.vinyl-trigger:disabled {cursor:default}
+.vinyl-trigger:focus-visible {outline-offset:-14px}
+.vinyl-art {display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 24px 28px var(--vinyl-shadow))}
+.record-arc {font:400 15px var(--font-interface);letter-spacing:3px}
+.record-move,.record-spin,.turntable-body,.tonearm {will-change:transform}
+.vinyl-player {position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:var(--space-md);animation:vinyl-player-in 650ms ease-out both}
+.vinyl-video-frame {overflow:hidden;border-radius:var(--gallery-radius);background:var(--vinyl-night);aspect-ratio:16/9;box-shadow:0 20px 70px var(--vinyl-shadow)}
+.vinyl-video-frame video {display:block;width:100%;height:100%;object-fit:cover}
+.vinyl-player-controls {display:flex;align-items:center;justify-content:flex-end;gap:var(--space-sm);font-size:var(--vinyl-copy)}
+.vinyl-player-controls>span {margin-right:auto;padding-left:var(--space-sm);color:var(--vinyl-muted)}
+.vinyl-player-controls .glass-action {background:var(--glass-readable);font-size:var(--vinyl-copy);padding:10px 18px}
+.vinyl-signature {text-align:center;margin-top:var(--vinyl-stage-gap)}
+.vinyl-stars {font:400 15px/1 var(--font-interface);letter-spacing:6px;color:var(--vinyl-cream)}
+.vinyl-signature p {font:400 clamp(17px,3vw,22px)/1.4 var(--font-display);letter-spacing:.09em;margin:12px 0 0}
+.vinyl-status {font:400 11px/1.5 var(--font-interface);color:var(--vinyl-muted);margin:20px 0 0;min-height:17px}
+@keyframes vinyl-sky {from{transform:translate3d(-2%,0,0) scale(1)}to{transform:translate3d(3%,-4%,0) scale(1.09)}}
+@keyframes vinyl-wave {to{transform:rotate(360deg)}}
+@keyframes vinyl-player-in {from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@media(min-width:768px) {.vinyl-tour {padding-top:100px}.vinyl-stage {max-width:650px;margin-top:-8px}.vinyl-signature {margin-top:-20px}}
+@media(prefers-reduced-motion:reduce) {.vinyl-aurora,.vinyl-invitation-light,.vinyl-player {animation:none}.record-move,.record-spin,.turntable-body,.tonearm {will-change:auto}}
+
+/* Match the button's moving colour field without its silver perimeter. */
+.vinyl-aurora {inset:auto;left:50%;top:50%;width:150vmax;height:150vmax;margin:-75vmax;background:conic-gradient(from 80deg,var(--vinyl-blue),var(--vinyl-plum),var(--vinyl-rose),var(--vinyl-blue));filter:blur(40px);animation:ambient-colour-wave var(--colour-wave-duration) linear infinite}
+.vinyl-invitation-light {animation:ambient-colour-wave var(--colour-wave-duration) linear infinite}
+@media(min-width:768px) {
+  .vinyl-tour {height:100svh;min-height:0;padding:70px var(--edge) 18px;justify-content:center;gap:0;--vinyl-title:clamp(30px,6svh,60px)}
+  .vinyl-invitation {margin-top:14px}
+  .vinyl-stage {flex:none;width:min(650px,calc((100svh - 410px) * 1.42857));max-width:100%;margin-top:0}
+  .vinyl-signature {margin-top:0}
+  .vinyl-signature p {margin-top:8px;font-size:18px}
+  .vinyl-status {position:absolute;bottom:4px;margin:0}
+}
+@media(min-width:768px) and (max-height:600px) {
+  .vinyl-tour {padding-top:60px;--vinyl-title:28px}
+  .vinyl-title br {display:none}
+  .vinyl-title em::before {content:' '}
+  .vinyl-invitation {margin-top:8px;padding-block:10px;min-height:44px}
+  .vinyl-stage {width:min(650px,calc((100svh - 300px) * 1.42857))}
+  .vinyl-stars {font-size:12px}
+  .vinyl-signature p {margin-top:5px;font-size:15px}
+}
+@media(prefers-reduced-motion:reduce) {.vinyl-aurora,.vinyl-invitation-light {animation:none}}
+
+.vinyl-properties-action {margin-top:14px}
+.vinyl-properties-action .glass-action {background:var(--glass-readable)}
+.vinyl-signature {position:relative;z-index:1}
+.vinyl-signature .vinyl-tagline {font-size:clamp(18px,2.2vw,25px);letter-spacing:0;margin-top:14px;text-wrap:balance}
+/* Match the shorter grouped timeline so each reveal keeps its existing pace. */
+.vinyl-scroll-scene {height:117svh;position:relative;background:#08090f}
+.vinyl-scroll-sticky {position:sticky;top:0;height:100svh;overflow:hidden}
+.vinyl-scroll-sticky .vinyl-tour {height:100svh;min-height:0;padding-top:calc(var(--nav-top) + var(--nav-height) + 28px)}
+.vinyl-scroll-sticky .vinyl-tour::before {content:'';position:absolute;inset:0 0 auto;height:28svh;background:linear-gradient(to bottom,#08090f 0%,rgba(8,9,15,.88) 18%,transparent 100%);z-index:0;pointer-events:none}
+.vinyl-scroll-sticky .vinyl-stage {z-index:1}
+.vinyl-stars {display:inline-block}
+.vinyl-properties-action .vinyl-invitation,.vinyl-player-controls .vinyl-invitation {background:var(--vinyl-cta);margin:0;padding:14px 23px;font-size:var(--vinyl-copy);min-height:48px}
+.vinyl-stage[data-phase=closing] .vinyl-player {animation:none;pointer-events:none}
+.vinyl-stage .vinyl-player {animation:none;opacity:0;pointer-events:none}
+.vinyl-stage .vinyl-player[data-visible=true] {pointer-events:auto}
+.inquire-handset {width:13px;height:13px;scale:-1 1;transform-origin:center;animation:handset-ring 2s ease-in-out infinite}
+.navigation .inquire {gap:5px}
+@keyframes handset-ring {0%,72%,100%{transform:rotate(0)}77%,87%{transform:rotate(-13deg)}82%,92%{transform:rotate(13deg)}}
+@media(prefers-reduced-motion:reduce){.inquire-handset{animation:none}.vinyl-stage .vinyl-player{transition:none}}
+.vinyl-scroll-sticky .vinyl-intro,.vinyl-scroll-sticky .vinyl-signature {flex-shrink:0}
+.vinyl-scroll-sticky .vinyl-stage {flex-shrink:1;min-height:0}
+@media(max-width:767px) {
+  .vinyl-scroll-sticky .vinyl-title {font-size:clamp(34px,6svh,48px)}
+  .vinyl-scroll-sticky .vinyl-stage {width:min(100%,calc((100svh - 460px) * 1.42857));min-width:200px}
+  .vinyl-scroll-sticky .vinyl-invitation {margin-top:16px}
+  .vinyl-scroll-sticky .vinyl-signature {margin-top:0}
+}
+@media(prefers-reduced-motion:reduce) {
+  .vinyl-scroll-scene {height:auto}
+  .vinyl-scroll-sticky {position:relative;height:auto;overflow:visible}
+  .vinyl-scroll-sticky .vinyl-tour {min-height:100svh;height:auto}
+}

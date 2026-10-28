@@ -1,0 +1,11 @@
+node_modules/
+build/
+qa-results/
+assets/enhanced-gallery/
+.local-media-archive/
+.vercel/
+qa/
+*.log
+.env
+.env.*
+!.env.example

@@ -1,0 +1,95 @@
+/* Shared with the approved hero navigation: tint, blur, font and pill geometry. */
+@property --silver-angle {syntax: '<angle>'; initial-value: 190deg; inherits: false}
+:root {
+  --glass-control-padding: 12px 22px;
+  --silver-tail: rgba(238, 242, 249, .07);
+  --silver-light: rgba(238, 242, 249, .52);
+  --silver-speed: 14s;
+  --silver-stroke: 1px;
+  --glass-control-gap: 20px;
+  --glass-hover-light: rgba(245, 248, 255, .07);
+  --property-glass-tint: rgba(8, 12, 18, .66);
+  --property-panel-padding: clamp(20px, 4vw, 36px);
+  --tag-text-shadow: 0 1px 5px rgba(0, 0, 0, .9);
+  --hero-action-gap: 20px;
+  --feature-chip-space: 12px 20px;
+}
+.glass-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--glass-control-gap);
+  min-height: var(--touch);
+  max-width: 100%;
+  padding: var(--glass-control-padding);
+  border: 0;
+  border-radius: var(--pill);
+  font: 400 var(--nav-size)/1.5 var(--font-interface);
+  color: var(--foreground);
+  text-align: center;
+  transition: color var(--transition) ease-out, box-shadow var(--transition) ease-out;
+}
+.glass-action:hover {box-shadow: inset 0 0 24px var(--glass-hover-light)}
+.quoted-label {white-space: nowrap}
+.navigation-arrow {font-family: var(--font-interface); font-size: 1.2em; font-weight: 400; line-height: 1}
+.silver-trace {isolation: isolate}
+.silver-trace::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--silver-stroke);
+  background: conic-gradient(from var(--silver-angle), transparent 0deg 318deg, var(--silver-tail) 332deg, var(--silver-light) 350deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: silver-orbit var(--silver-speed) linear infinite;
+  pointer-events: none;
+}
+.navigation.silver-trace::after {opacity: .5; animation-duration: 24s}
+[data-tone=opaque] {--glass: var(--property-glass-tint)}
+.hero-properties {position: absolute; top: calc(var(--nav-top) + var(--nav-height) + var(--hero-action-gap)); left: 50%; transform: translateX(-50%); z-index: 2}
+.properties-link.glass-action {border: 0; margin-top: var(--discovery-link-space)}
+.photo-tag.glass {background: var(--glass); border-radius: var(--pill); text-shadow: var(--tag-text-shadow)}
+.stack-card[data-front=true] {touch-action: pan-y pinch-zoom}
+.stack-card:focus-visible {outline: 2px solid var(--focus); outline-offset: 8px}
+.discovery-inner {gap: clamp(48px, 8vw, 112px)}
+.ambient-text-control {position: absolute; bottom: var(--edge); right: var(--edge); color: var(--gallery-muted)}
+.discovery-section[data-motion-paused=true] .silver-trace::after {animation-play-state: paused}
+.property-page {--glass: var(--property-glass-tint); padding-top: calc(var(--nav-top) + var(--nav-height) + var(--discovery-padding)); max-width: calc(var(--discovery-width) + var(--discovery-padding)*2)}
+.property-page:has(.property-introduction) {--gallery-radius: 24px}
+.property-page-header {padding-block: clamp(40px, 6vw, 72px)}
+.property-entry-heading {margin-block: var(--space-md); min-height: var(--touch)}
+.property-entry .property-cover-link {display: block; border-radius: var(--gallery-radius)}
+.property-entry .feature-frames {gap: var(--space-sm); margin: 0; padding: 0; list-style: none}
+.feature-chip.glass {display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch); padding: var(--feature-chip-space); border-radius: var(--pill); font: 400 var(--nav-size)/1.5 var(--font-interface); color: var(--foreground)}
+.feature-frames {display: flex; flex-wrap: wrap; gap: var(--space-sm); list-style: none; padding: 0; margin: 0}
+.dedicated-cover {aspect-ratio: 1.6}
+.property-detail-glass {margin-block: var(--space-md); padding: var(--property-panel-padding); border-radius: var(--gallery-radius)}
+.property-detail-glass h2 {margin: 0 0 var(--space-md); font: 400 clamp(28px, 4vw, 48px)/1.15 var(--font-display)}
+.property-feature-gallery {display: grid; gap: var(--property-grid-gap); margin-top: var(--property-grid-gap)}
+.property-feature-gallery figure {position: relative; margin: 0; aspect-ratio: 1.25; border-radius: var(--gallery-radius); overflow: hidden}
+.property-feature-gallery img {display: block; width: 100%; height: 100%; object-fit: cover}
+.property-feature-gallery figcaption {position: absolute; bottom: var(--space-md); left: var(--space-md); padding: var(--feature-chip-space); border-radius: var(--pill); font: 400 var(--nav-size)/1.5 var(--font-interface)}
+.notice .glass-action {font-size: var(--nav-size)}
+@keyframes silver-orbit {from {--silver-angle:190deg} to {--silver-angle:550deg}}
+@media(min-width:768px) {
+  :root {--discovery-heading: clamp(38px, 5.2vw, 80px)}
+  .property-feature-gallery {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+@media(prefers-reduced-motion:reduce) {.silver-trace::after {animation: none}.ambient-text-control {display:none}}
+
+/* Current correction: compact property label and individually linked film controls. */
+.property-cover>.property-id-badge {left:auto;right:var(--space-md);bottom:var(--space-md);padding:var(--gallery-tag-padding);border-radius:var(--pill);opacity:1;font:400 var(--brand-size)/1.2 var(--font-interface);letter-spacing:.04em}
+.feature-navigation {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-sm);max-width:var(--nav-width)}
+.feature-navigation .glass-action {padding:var(--feature-chip-space);gap:var(--space-md);justify-content:space-between}
+.property-film {min-width:0;scroll-margin-top:calc(var(--nav-top) + var(--nav-height) + 24px)}
+.feature-video-heading {position:relative;display:flex;align-items:center;justify-content:space-between;min-height:var(--nav-height);padding:0 var(--property-panel-padding);border-radius:var(--pill);margin-bottom:var(--space-md);font:400 var(--nav-size)/1.5 var(--font-interface)}
+.feature-video-heading h3 {font:inherit;margin:0}
+.feature-video-heading>span {font-size:var(--photo-tag-size);letter-spacing:.06em;color:var(--gallery-muted)}
+.property-film video {display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--gallery-radius);background:var(--surface)}
+html:has(.property-page) {scroll-behavior:smooth}
+@media(min-width:600px) {.property-detail-glass .feature-navigation {grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce) {html:has(.property-page) {scroll-behavior:auto}}

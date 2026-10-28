@@ -1,0 +1,10 @@
+node_modules
+build
+qa
+qa-results
+assets
+.local-media-archive
+.21st
+tools
+*.log
+.env*

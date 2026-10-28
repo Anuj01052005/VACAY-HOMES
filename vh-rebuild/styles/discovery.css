@@ -1,0 +1,100 @@
+:root {
+  --discovery-width: 1120px;
+  --discovery-padding: clamp(28px, 6vw, 80px);
+  --discovery-gap: clamp(48px, 7vw, 112px);
+  --gallery-size: min(76vw, 360px);
+  --gallery-radius: 20px;
+  --gallery-shadow: 0 20px 70px rgba(0, 0, 0, .35), 0 0 40px rgba(255, 255, 255, .025);
+  --gallery-muted: #b9b7bf;
+  --gallery-rule: rgba(245, 243, 237, .22);
+  --sky-purple: rgba(63, 38, 83, .39);
+  --sky-pink: rgba(105, 45, 78, .23);
+  --sky-blue: rgba(28, 56, 86, .42);
+  --discovery-heading: clamp(44px, 11.5vw, 62px);
+  --gallery-caption: 13px;
+  --photo-tag-size: 9px;
+  --gallery-ui-gap: 12px;
+  --gallery-toolbar-space: 28px;
+  --gallery-button-radius: 50%;
+  --gallery-control-fill: rgba(255, 255, 255, .04);
+  --gallery-control-hover: rgba(255, 255, 255, .11);
+  --gallery-tag-fill: rgba(6, 9, 13, .62);
+  --gallery-tag-color: #fff;
+  --gallery-tag-inset: 14px;
+  --gallery-tag-padding: 6px 8px;
+  --discovery-link-size: 15px;
+  --discovery-link-space: 26px;
+  --property-grid-gap: 44px;
+  --property-page-heading: clamp(48px, 9vw, 100px);
+  --property-number: clamp(80px, 14vw, 180px);
+}
+.discovery-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-height: 100svh;
+  display: grid;
+  align-items: center;
+  padding: calc(var(--nav-height) + var(--discovery-padding)) var(--discovery-padding) var(--discovery-padding);
+  background: var(--background);
+  scroll-margin-top: 0;
+}
+.discovery-sky {
+  position: absolute;
+  inset: -15%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 20% 35%, var(--sky-blue), transparent 58%), radial-gradient(ellipse at 80% 65%, var(--sky-purple), transparent 60%), radial-gradient(ellipse at 55% 90%, var(--sky-pink), transparent 48%);
+  animation: sky-drift 48s ease-in-out infinite alternate;
+  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+}
+.discovery-section[data-motion-paused=true] .discovery-sky {animation-play-state: paused}
+.discovery-inner {width: 100%; max-width: var(--discovery-width); margin: auto; display: grid; gap: var(--discovery-gap); align-items: center}
+.photo-carousel {width: 100%; min-width: 0; max-width: var(--gallery-size); justify-self: center}
+.stack-stage {position: relative; width: 100%; aspect-ratio: 1; perspective: 1200px; isolation: isolate}
+.stack-card {position: absolute; inset: 0; overflow: hidden; border-radius: var(--gallery-radius); background: var(--surface); box-shadow: var(--gallery-shadow); transform-origin: 85% 85%; user-select: none; pointer-events: none}
+.stack-card[data-front=true] {cursor: grab; touch-action: pan-y; pointer-events: auto}
+.stack-card[data-front=true]:active {cursor: grabbing}
+.stack-card img {display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none}
+.photo-tag {position: absolute; right: var(--gallery-tag-inset); bottom: var(--gallery-tag-inset); padding: var(--gallery-tag-padding); border-radius: var(--pill); background: var(--gallery-tag-fill); color: var(--gallery-tag-color); font: 400 var(--photo-tag-size)/1.2 var(--font-interface); letter-spacing: .08em; pointer-events: none}
+.carousel-toolbar {display: flex; align-items: center; justify-content: space-between; gap: var(--gallery-ui-gap); margin-top: var(--gallery-toolbar-space)}
+.photo-caption {display: grid; gap: var(--space-sm); font-size: var(--gallery-caption); color: var(--foreground); line-height: 1.3}
+.photo-count {font-variant-numeric: tabular-nums; letter-spacing: .06em}
+.photo-count span {color: var(--gallery-muted)}
+.carousel-buttons {display: flex; gap: var(--space-sm)}
+.round-control {display: inline-flex; align-items: center; justify-content: center; width: var(--touch); height: var(--touch); flex-shrink: 0; border: 1px solid var(--gallery-rule); border-radius: var(--gallery-button-radius); background: var(--gallery-control-fill); transition: background var(--transition) ease-out, border-color var(--transition) ease-out}
+.round-control:hover {background: var(--gallery-control-hover); border-color: var(--gallery-muted)}
+.discovery-copy {text-align: center}
+.discovery-copy h2 {margin: 0; font: 400 var(--discovery-heading)/1.06 var(--font-display); letter-spacing: -.035em; text-wrap: balance}
+.properties-link {display: inline-flex; align-items: center; justify-content: space-between; gap: var(--discovery-link-space); min-height: var(--touch); margin-top: var(--discovery-link-space); padding-block: var(--space-sm); border-bottom: 1px solid var(--gallery-rule); font-size: var(--discovery-link-size)}
+.ambient-control {position: absolute; right: var(--edge); bottom: var(--edge); color: var(--gallery-muted)}
+.property-page {max-width: var(--discovery-width); margin: auto; padding: var(--discovery-padding); min-height: 100svh; background: radial-gradient(ellipse at 90% 90%, var(--sky-purple), transparent 65%)}
+.back-link {display: inline-flex; min-height: var(--touch); align-items: center; font-size: var(--discovery-link-size)}
+.property-page-header {padding-block: var(--discovery-gap)}
+.property-page-header p {margin: 0 0 var(--space-md); color: var(--gallery-muted); font-size: var(--gallery-caption); letter-spacing: .08em}
+.property-page-header h1 {position: static; margin: 0; text-align: left; font: 400 var(--property-page-heading)/1 var(--font-display); letter-spacing: -.04em}
+.property-grid {display: grid; gap: var(--property-grid-gap)}
+.property-entry {min-width: 0}
+.property-cover {position: relative; aspect-ratio: 1.15; border-radius: var(--gallery-radius); overflow: hidden; background: var(--surface)}
+.property-cover img {display: block; width: 100%; height: 100%; object-fit: cover}
+.property-cover>span {position: absolute; left: var(--space-md); bottom: calc(-1 * var(--space-sm)); color: var(--foreground); opacity: .55; font: 400 var(--property-number)/.8 var(--font-display); letter-spacing: -.05em}
+.property-entry-heading {display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); margin-block: var(--space-md)}
+.property-entry-heading h2 {margin: 0; font-size: var(--brand-size); font-weight: 400}
+.property-entry-heading>span,.coming-note {font-size: var(--gallery-caption); color: var(--gallery-muted)}
+.property-entry ul {display: flex; gap: var(--space-sm) var(--space-md); list-style: none; padding: 0; margin: 0; flex-wrap: wrap; font-size: var(--gallery-caption); color: var(--gallery-muted)}
+.coming-cover {background: radial-gradient(ellipse at 25% 25%, var(--sky-blue), transparent 70%), radial-gradient(ellipse at 85% 80%, var(--sky-pink), transparent 65%), var(--surface)}
+.coming-cover>p {position: absolute; top: 45%; left: var(--space-md); right: var(--space-md); margin: 0; text-align: center; color: var(--gallery-muted); font-size: var(--discovery-link-size)}
+.property-introduction img {display: block; width: 100%; max-height: 65svh; object-fit: cover; border-radius: var(--gallery-radius)}
+.property-introduction p {color: var(--gallery-muted); font-size: var(--discovery-link-size); line-height: 1.6}
+@keyframes sky-drift {from {transform: translate3d(-2%, 0, 0) scale(1)} to {transform: translate3d(3%, -3%, 0) scale(1.08)}}
+@media(min-width:768px) {
+  :root {--gallery-size: min(36vw, 420px); --discovery-heading: clamp(60px, 5.7vw, 86px)}
+  .discovery-inner {grid-template-columns: 1fr 1fr}
+  .discovery-copy {text-align: left}
+  .property-grid {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+@media(prefers-reduced-motion:reduce) {
+  .discovery-sky {animation: none}
+  .ambient-control {display: none}
+  .stack-card {transform: none!important}
+}
