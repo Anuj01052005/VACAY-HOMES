@@ -18,10 +18,11 @@ import { useSmoothScroll } from '@/hooks/use-smooth-scroll';
 gsap.registerPlugin(ScrollTrigger);
 
 export function App(){
- const {route,navigate}=usePageNavigation();
- const lenis=useSmoothScroll(route);
- const propertiesPage=new URLSearchParams(window.location.search).get('page')==='properties';
- const diningPage=new URLSearchParams(window.location.search).get('page')==='dining';
+ const lenis=useSmoothScroll();
+ const {route,locationKey,navigate,back,transitionRef}=usePageNavigation(lenis);
+ const query=new URL(route,location.origin).searchParams;
+ const propertiesPage=query.get('page')==='properties';
+ const diningPage=query.get('page')==='dining';
  const innerPage=propertiesPage||diningPage;
  const scene=useRef<HTMLElement>(null);const photo=useRef<HTMLDivElement>(null);const title=useRef<HTMLHeadingElement>(null);const cue=useRef<HTMLButtonElement>(null);const navigation=useRef<HTMLElement>(null);
  const reduced=useReducedMotion();const [notice,setNotice]=useState('');const [inquiryOpen,setInquiryOpen]=useState(false);
@@ -43,7 +44,7 @@ export function App(){
   window.addEventListener('scroll',updateNavigation,{passive:true});
   window.addEventListener('resize',updateNavigation);
   return()=>{window.removeEventListener('scroll',updateNavigation);window.removeEventListener('resize',updateNavigation);};
- },[route]);
+ },[route,locationKey]);
  useEffect(()=>{document.title=diningPage?'Buffet Menu — Vacay Homes':propertiesPage?(new URLSearchParams(location.search).get('property')==='002'?'Farm':'Properties — Vacay Homes'):'Vacay Homes — Farm';},[route,propertiesPage]);
  const titlePairs=[['V','H'],['A','O'],['C','M'],['A','E'],['Y','S']];
  useLayoutEffect(()=>{
@@ -85,7 +86,7 @@ export function App(){
  const go=(target:number)=>{if(lenis.current)lenis.current.scrollTo(target);else window.scrollTo({top:target,behavior:'instant'});};
  return <>
   <a className="skip-link" href="#home">Skip to the villa</a>
-  <Navigation ref={navigation} hidden={footerActive} opaque={innerPage} onRules={()=>setRulesOpen(true)} onHome={()=>navigate('./#home')} onNavigate={navigate} onInquire={()=>setInquiryOpen(true)} onNotice={setNotice}/>
+  <Navigation ref={navigation} hidden={footerActive} opaque={innerPage} onBack={back} onRules={()=>setRulesOpen(true)} onHome={()=>{void navigate('./#home');}} onNavigate={navigate} onInquire={()=>setInquiryOpen(true)} onNotice={setNotice}/>
   {innerPage&&<div className="nav-clearance" aria-hidden="true"/>}
   <div key={route} className="page-surface">{diningPage?<DiningPage/>:propertiesPage?<PropertiesPage/>:<main><section id="home" ref={scene} className="hero-scene" aria-label="VACAY HOMES FARM">
    <div className="hero-viewport">
@@ -95,6 +96,7 @@ export function App(){
     <button ref={cue} className="hero-discover-cue" aria-label="Scroll to Discover" onClick={()=>go(window.innerHeight*1.65)}><span className="hero-cue-text" aria-hidden="true">Scroll to Discover</span><span className="hero-cue-arrow" aria-hidden="true">↓</span></button>
    </div>
   </section><VinylScrollSection/></main>}<div className="footer-join" aria-hidden="true"/><SiteFooter onNotice={setNotice} onRules={()=>setRulesOpen(true)}/></div>
+  <div ref={transitionRef} className="page-transition" aria-hidden="true"/>
   <InquiryDialog open={inquiryOpen} onClose={()=>setInquiryOpen(false)}/>
   <RulesDialog open={rulesOpen} onClose={()=>setRulesOpen(false)}/>
   {notice&&<div className="notice glass" role="status"><p>{notice}</p><button className="glass glass-action" onClick={()=>setNotice('')} aria-label="Dismiss message">Close</button></div>}

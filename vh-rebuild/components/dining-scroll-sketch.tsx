@@ -26,7 +26,7 @@ export function DiningScrollSketch({kind}:{kind:Kind}){
  useLayoutEffect(()=>{
   const paths=root.current?.querySelectorAll<SVGPathElement>('.brush-reveal');
   if(!paths)return;
-  if(reduced){paths.forEach(path=>{path.style.removeProperty('stroke-dasharray');path.style.removeProperty('stroke-dashoffset');});return;}
+  if(reduced){gsap.set(paths,{strokeDasharray:1,strokeDashoffset:0});return;}
   const context=gsap.context(()=>{
    gsap.set(paths,{strokeDasharray:1,strokeDashoffset:1});
    // Fractional offsets are essential: pixel rounding would pop each brush pass on.
@@ -35,22 +35,12 @@ export function DiningScrollSketch({kind}:{kind:Kind}){
    const trigger=kind==='arrow'?root.current?.closest('header'):root.current;
    if(!trigger)return;
    const distance=()=>Math.min(window.innerHeight*(kind==='arrow'?.4:.55),kind==='arrow'?300:420);
-   let lastScroll=window.scrollY;
-   const entry=trigger.getBoundingClientRect().top+lastScroll-window.innerHeight*.95;
-   let painted=gsap.utils.clamp(0,1,(lastScroll-entry)/distance());
-   timeline.progress(painted);
-   const render=(value:number)=>{painted=gsap.utils.clamp(0,1,value);timeline.progress(painted);};
-   // Accumulate only visible scroll distance: no fully-painted dead zone on reversal.
-   // A paused timeline also holds every brush mark exactly when scrolling stops.
-   ScrollTrigger.create({trigger,start:'top 95%',end:'bottom 5%',invalidateOnRefresh:true,
-    onUpdate:self=>{
-     const current=self.scroll();
-     if(self.isActive && current>lastScroll)render(painted+(current-lastScroll)/distance());
-     else if(self.isActive && current<lastScroll)render(1);
-     lastScroll=current;
-    },
-    onLeave:()=>render(1),onLeaveBack:()=>render(1),
-    onRefresh:self=>{lastScroll=self.scroll();},
+   let painted=0;
+   const render=(value:number)=>{painted=Math.max(painted,gsap.utils.clamp(0,1,value));timeline.progress(painted);};
+   // Paint with forward scroll; reversing holds the marks already drawn.
+   ScrollTrigger.create({trigger,start:'top 95%',end:()=>`+=${distance()}`,invalidateOnRefresh:true,
+    onUpdate:self=>{if(self.direction>0)render(self.progress);},
+    onLeave:self=>{if(self.direction>0)render(1);},
    });
   },root);
   return()=>context.revert();
@@ -58,7 +48,7 @@ export function DiningScrollSketch({kind}:{kind:Kind}){
  return <svg ref={root} className={kind==='arrow'?'course-sketch-arrow':'meal-brush-art'} data-brush-kind={kind} viewBox={kind==='arrow'?'40 0 210 260':'0 0 300 270'} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
   <defs>
    <filter id={`${uid}-edge`} x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".12 .7" numOctaves="2" seed="7" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale="1.3" xChannelSelector="R" yChannelSelector="G"/></filter>
-   <mask id={`${uid}-paint`} maskUnits="userSpaceOnUse" x="-10" y="-10" width="320" height="290"><g filter={`url(#${uid}-edge)`}>{marks.map((mark,i)=><path key={i} className="brush-reveal" data-brush-stroke={i} pathLength="1" d={mark.trace} stroke="white" strokeWidth={mark.width}/>)}</g></mask>
+   <mask id={`${uid}-paint`} maskUnits="userSpaceOnUse" x="-10" y="-10" width="320" height="290"><g filter={`url(#${uid}-edge)`}>{marks.map((mark,i)=><path key={i} className="brush-reveal" data-brush-stroke={i} pathLength="1" strokeDasharray="1 1" strokeDashoffset="1" d={mark.trace} stroke="white" strokeWidth={mark.width}/>)}</g></mask>
   </defs>
   {kind==='arrow'?<g mask={`url(#${uid}-paint)`} filter={`url(#${uid}-edge)`}>
    <path d={arrow} stroke="var(--brush-ink)" strokeWidth="6.5"/>

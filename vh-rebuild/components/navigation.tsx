@@ -3,10 +3,10 @@ import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { content } from '@/content';
 import { SilverTrace } from './ui/silver-trace';
 
-export const Navigation = forwardRef<HTMLElement, {hidden?:boolean; opaque?: boolean; onHome?: () => void; onNavigate: (href:string) => void; onInquire: () => void; onNotice: (message: string) => void; onRules:()=>void}>(function Navigation({hidden, opaque, onHome, onNavigate, onInquire, onNotice, onRules}, ref) {
+export const Navigation = forwardRef<HTMLElement, {hidden?:boolean; opaque?: boolean; onHome?: () => void; onBack:()=>void; onNavigate: (href:string) => void; onInquire: () => void; onNotice: (message: string) => void; onRules:()=>void}>(function Navigation({hidden, opaque, onHome, onBack, onNavigate, onInquire, onNotice, onRules}, ref) {
   const [open, setOpen] = useState(false);
   return <header ref={ref} className="navigation glass silver-trace" data-footer-hidden={hidden||undefined} inert={hidden||undefined} aria-hidden={hidden||undefined} data-tone={opaque?'opaque':undefined} aria-label="Main navigation">
-    {opaque?<button className="menu-trigger" onClick={()=>{if(history.state?.vacay||history.length>1)history.back();else onNavigate("./#home");}} aria-label="Go back">Back</button>:<Dropdown.Root open={open} onOpenChange={setOpen} modal={false}>
+    {opaque?<button className="menu-trigger" onClick={onBack} aria-label="Go back">Back</button>:<Dropdown.Root open={open} onOpenChange={setOpen} modal={false}>
       <Dropdown.Trigger className="menu-trigger" aria-label="Menu"><span className="menu-icon" aria-hidden="true"><i/><i/></span><span>Menu</span></Dropdown.Trigger>
       <Dropdown.Portal><Dropdown.Content className="dropdown glass" data-tone={opaque?'opaque':undefined} align="start" sideOffset={16} collisionPadding={12}>
         {content.menu.map(item => <Dropdown.Item key={item.label} className="menu-item glass silver-trace" onSelect={() => {if(item.href)onNavigate(item.href);else onNotice(`${item.label} is being prepared.`);}}>{item.label}<SilverTrace/></Dropdown.Item>)}

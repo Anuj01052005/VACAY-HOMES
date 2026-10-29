@@ -15,6 +15,8 @@ export function VinylTour() {
   const sequence=useRef<gsap.core.Timeline|null>(null);
   const [phase,setPhase]=useState<Phase>('idle');
   const [videoReady,setVideoReady]=useState(false);
+  const [playbackError,setPlaybackError]=useState(false);
+  const [attempt,setAttempt]=useState(0);
   const reduced=useReducedMotion();
   const id=useId().replaceAll(':','');
   const film=content.fullTour;
@@ -42,12 +44,15 @@ export function VinylTour() {
     const element=video.current;
     if(!element)return;
     let cancelled=false;
-    // Buffer before exposing the player; never play/pause a hidden first frame.
+    // A decoded first frame is enough; canplaythrough is not reliable for mobile streaming.
     const ready=()=>{if(!cancelled)setVideoReady(true);};
-    element.addEventListener('canplaythrough',ready);
+    const failed=()=>{if(!cancelled)setPlaybackError(true);};
+    element.addEventListener('loadeddata',ready);
+    element.addEventListener('canplay',ready);
+    element.addEventListener('error',failed);
     element.preload='auto';
     if(element.networkState===HTMLMediaElement.NETWORK_EMPTY)element.load();
-    if(element.readyState===HTMLMediaElement.HAVE_ENOUGH_DATA)ready();
+    if(element.readyState>=HTMLMediaElement.HAVE_CURRENT_DATA)ready();
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')reset();};
     let resumeOnReturn=false;
     const visibility=()=>{
@@ -56,7 +61,7 @@ export function VinylTour() {
     };
     document.addEventListener('keydown',escape);
     document.addEventListener('visibilitychange',visibility);
-    return()=>{cancelled=true;element.pause();element.removeEventListener('canplaythrough',ready);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
+    return()=>{cancelled=true;element.pause();element.removeEventListener('loadeddata',ready);element.removeEventListener('canplay',ready);element.removeEventListener('error',failed);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
   },[phase==='loading'||phase==='playing']);
 
   useEffect(()=>{
@@ -64,11 +69,10 @@ export function VinylTour() {
       const element=video.current;
       if(!element)return;
       let cancelled=false;
-      let frame:number|undefined;
       let fade:gsap.core.Timeline|undefined;
       const reveal=()=>{
         if(cancelled)return;
-        // Keep the turntable visible until playback has resumed and painted.
+        // Crossfade only after play succeeds. Hidden-video frame callbacks can stall indefinitely.
         fade=gsap.timeline({defaults:{ease:'power1.inOut'}})
           .to(root.current?.querySelector('.vinyl-player')??null,{opacity:1,duration:reduced?.15:1.2},0)
           .to(scene.current,{opacity:0,duration:reduced?.15:1.2},0);
@@ -76,16 +80,16 @@ export function VinylTour() {
       };
       void element.play().then(()=>{
         if(cancelled)return;
-        if(element.requestVideoFrameCallback)frame=element.requestVideoFrameCallback(reveal);
-        else requestAnimationFrame(reveal);
-      }).catch(()=>{});
-      return()=>{cancelled=true;fade?.kill();if(frame!==undefined)element.cancelVideoFrameCallback?.(frame);};
+        reveal();
+      }).catch(()=>{if(!cancelled)setPlaybackError(true);});
+      return()=>{cancelled=true;fade?.kill();};
     }
-  },[phase,videoReady,reduced]);
+  },[phase,videoReady,reduced,attempt]);
 
   const start=()=>{
     if(phase!=='idle')return;
     setVideoReady(false);
+    setPlaybackError(false);
     setPhase('loading');
     spin.current?.pause();
     const enter=()=>{spin.current?.pause();setPhase('playing');};
@@ -183,7 +187,11 @@ export function VinylTour() {
       </div>}
     </div>
     <div className="vinyl-signature"><span className="vinyl-stars" aria-label="Five decorative stars">★★★★★</span><div className="vinyl-properties-action"><GlassLink className="vinyl-invitation" href="./?page=properties">Properties<span className="vinyl-invitation-light" aria-hidden="true"/></GlassLink></div><p className="vinyl-tagline">“A little away, a lot together.”</p></div>
-    {phase==='loading'&&<p className="vinyl-status" role="status">Setting the needle…</p>}
+    {(phase==='loading'||phase==='playing'&&(!videoReady||playbackError))&&<div className="vinyl-status" role="status">
+      <p>{playbackError?'The tour could not start. Please try again.':phase==='loading'?'Setting the needle…':'Preparing your tour…'}</p>
+      {playbackError&&<button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);const element=video.current;if(!element)return;if(element.error){setVideoReady(false);element.load();}void element.play().then(()=>setAttempt(value=>value+1)).catch(()=>setPlaybackError(true));}}>Play tour</button>}
+      <button className="vinyl-invitation glass" onClick={reset}>Close Tour</button>
+    </div>}
   </section>;
 }
 

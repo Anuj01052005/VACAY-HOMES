@@ -39,3 +39,14 @@ No browser favicon is configured; an explicit /favicon.ico request returns 404. 
 The build contains older optimized clips alongside the current clips (~65 MB total). They are not all downloaded by each visitor. Removing unused copies is optional housekeeping and was not performed during the audit.
 
 No audit can guarantee the absence of every security threat or future fault. No confirmed exploit was found by the completed checks. The optional paid Strix scan was explicitly waived by the user; no Strix pentest result is claimed.
+
+## Navigation and playback regression fixes — 30 October 2026
+
+- Reproduced the live tour readiness deadlocks, lost footer Back position, covered Terrace heading and overlapping call tooltip at 390 and 1440 pixels.
+- A persistent Lenis instance now owns desktop scrolling. Route changes stop outgoing momentum, mount at the top behind a dark fade, refresh measurements, then restore the destination. Browser history saves a separate scroll position per entry; Back also works when requested during a transition.
+- Removed whole-page transform/filter transitions, which created an unnecessary compositing context around sticky content. Footer light, letter movement and Dining parallax remain unchanged.
+- Video reveals after a decoded frame and successful playback, without requiring canplaythrough or a callback from an invisible video. Failed playback has a retry and close path.
+- SVG brush masks start hidden in markup and paint with forward scrolling; previous marks stay painted on reverse scrolling. Footer call tooltip is removed; accessible link labels remain.
+- Normal-motion regression suite: 18 checks passed across 390 and 1440 pixels. Footer scroll samples on Home, Dining and Farm showed no backward jumps, changing document height or horizontal overflow.
+- Production preview: 8 confirming checks passed, including mobile/desktop tour playback, first-click footer links, browser and navigation Back restoration, and Dining brush entry. TypeScript and Vite production build passed.
+- These are browser-emulated device checks, not a claim of testing every physical phone or guaranteeing a particular frame rate.

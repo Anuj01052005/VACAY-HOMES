@@ -15,13 +15,12 @@
 }
 html {scrollbar-width:none}
 ::-webkit-scrollbar {display:none;width:0;height:0}
-.page-surface {overflow-x:clip}
+.page-surface {overflow-x:clip;overflow-anchor:none}
 main:focus {outline:none}
-html[data-view-transition=fallback] .page-surface {animation:page-arrive var(--page-enter-duration) cubic-bezier(.22,1,.36,1) both}
-::view-transition-old(root) {animation:page-depart var(--page-exit-duration) ease-out both}
-::view-transition-new(root) {animation:page-arrive var(--page-enter-duration) cubic-bezier(.22,1,.36,1) both}
-@keyframes page-depart {to{opacity:0;transform:translateY(-12px) scale(1.012);filter:blur(5px)}}
-@keyframes page-arrive {from{opacity:0;transform:translateY(20px) scale(.985);filter:blur(7px)}to{opacity:1;transform:none;filter:blur(0)}}
+.page-transition {position:fixed;inset:0;z-index:1000;background:var(--background);opacity:0;visibility:hidden;pointer-events:none}
+.page-transition[data-active] {pointer-events:auto}
+.property-coming {scroll-margin-top:calc(var(--nav-top) + var(--nav-height) + 20px)}
+.vacay-footer .bwf-tip {display:none}
 .nav-clearance {position:fixed;inset:0 0 auto;height:calc(var(--nav-top) + var(--nav-height) + 42px);background:var(--nav-fade);z-index:18;pointer-events:none}
 
 .edge-shimmer {position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;border-radius:inherit}
@@ -64,9 +63,7 @@ html[data-view-transition=fallback] .page-surface {animation:page-arrive var(--p
   .vapor-canvas {display:none}
   .vapor-countdown .vapor-group {opacity:1!important}
   .vapor-countdown [data-vc-digit] {opacity:1!important}
-  ::view-transition-old(root),::view-transition-new(root),html[data-view-transition=fallback] .page-surface {animation:reduced-page-fade 150ms ease-out both}
 }
-@keyframes reduced-page-fade {from{opacity:.7}to{opacity:1}}
 
 /* One continuous approved 003 sky across the non-hero pages. */
 :root {
