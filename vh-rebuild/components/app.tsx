@@ -16,6 +16,7 @@ import { DiningPage } from './dining-page';
 import { usePageNavigation } from '@/hooks/use-page-navigation';
 import { useSmoothScroll } from '@/hooks/use-smooth-scroll';
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.config({ignoreMobileResize:true});
 
 export function App(){
  const lenis=useSmoothScroll();

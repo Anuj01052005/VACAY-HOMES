@@ -50,3 +50,11 @@ No audit can guarantee the absence of every security threat or future fault. No 
 - Normal-motion regression suite: 18 checks passed across 390 and 1440 pixels. Footer scroll samples on Home, Dining and Farm showed no backward jumps, changing document height or horizontal overflow.
 - Production preview: 8 confirming checks passed, including mobile/desktop tour playback, first-click footer links, browser and navigation Back restoration, and Dining brush entry. TypeScript and Vite production build passed.
 - These are browser-emulated device checks, not a claim of testing every physical phone or guaranteeing a particular frame rate.
+
+## iPhone / Arc Search follow-up
+
+- The user still observed retained footer positions and no tour video in Arc Search on an actual iPhone. Earlier Chrome viewport emulation was insufficient to certify this browser.
+- Added WebKit testing with mobile taps. Ordinary WebKit footer navigation passed on the previous build; the Arc-specific physical-device failure was not directly reproduced. Touch-only footer links now create a fresh document with a dark departure/arrival fade, explicitly restoring saved history positions on Back. Desktop and other navigation retain the existing SPA behavior.
+- The previous video implementation failed a restrictive direct-tap media-permission test. Playback now starts inside the original tap, using an explicit device-appropriate source and inline/muted settings. The video returns to its beginning before crossfading in. A bounded GSAP entry handoff prevents a throttled animation clock from blocking a ready video.
+- Added a simulated late viewport-restoration test, native-navigation/Back checks, and video-state diagnostics on regression failures. Mobile toolbar-only resizes no longer force ScrollTrigger recalculation; Dining parallax remains page-specific.
+- Physical iPhone/Arc confirmation is still required; automated WebKit is not the Arc app running on iPhone hardware.

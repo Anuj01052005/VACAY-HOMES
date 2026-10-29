@@ -3,25 +3,34 @@
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const {chromium} = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright');
+const engines = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright');
+const engine=process.env.BROWSER_ENGINE||'chromium';
 const base = (process.env.BASE_URL || 'http://127.0.0.1:4181').replace(/\/$/, '');
 const results = [];
 const cases = (process.env.CASES || '').split(',').filter(Boolean);
 const sleep = (p, ms = 1100) => p.waitForTimeout(ms);
+async function scroll(p,delta){
+  if(engine==='webkit'&&p.viewportSize().width<768)await p.evaluate(y=>window.scrollBy(0,y),delta);
+  else await p.mouse.wheel(0,delta);
+}
 
 async function footer(p) {
-  await p.mouse.wheel(0, 100000);
+  await p.locator('.vacay-footer').waitFor({state:'attached'});
+  await p.evaluate(()=>document.fonts.ready);
+  await sleep(p,200);
+  await scroll(p, 100000);
   await p.waitForFunction(() => document.querySelector('.vacay-footer').getBoundingClientRect().top < innerHeight * .45);
   await sleep(p, 200);
 }
 async function footerLink(p, label) {
-  await p.getByRole('navigation', {name:'Our page', exact:true}).getByRole('link', {name:label, exact:true}).click({force:true});
+  const link=p.getByRole('navigation', {name:'Our page', exact:true}).getByRole('link', {name:label, exact:true});
+  if(p.viewportSize().width<768)await link.tap();else await link.click();
   await sleep(p);
   await p.waitForFunction(()=>!document.querySelector('.page-transition')?.dataset.active);
 }
 
 (async () => {
-  const browser = await chromium.launch({headless:true, executablePath:process.env.BROWSER_PATH || undefined});
+  const browser = await engines[engine].launch({headless:true, executablePath:engine==='chromium'?process.env.BROWSER_PATH || undefined:undefined});
   async function check(name, width, run) {
     if(cases.length && !cases.includes(name)) return;
     const p = await browser.newPage({viewport:{width,height:900},hasTouch:width<768,isMobile:width<768});
@@ -32,25 +41,39 @@ async function footerLink(p, label) {
       assert.deepEqual(errors, [], 'Unexpected page error');
       results.push({name,width,passed:true});
     } catch(e) {
-      results.push({name,width,passed:false,error:e.message});
+      const media=name.startsWith('tour-')?await p.evaluate(()=>{
+        const v=document.querySelector('video');return v?{phase:document.querySelector('.vinyl-stage')?.dataset.phase,ready:v.readyState,network:v.networkState,time:v.currentTime,paused:v.paused,error:v.error?.message,source:v.currentSrc}:null;
+      }).catch(()=>null):undefined;
+      results.push({name,width,passed:false,error:e.message,...(media?{media}:{})});
       await p.screenshot({path:`qa/regression-${name}-${width}.png`}).catch(()=>{});
     } finally { await p.close(); }
     console.log(JSON.stringify(results.at(-1)));
     fs.writeFileSync('qa/browser-regressions.json', JSON.stringify(results,null,2));
   }
   try {
-    for(const width of [390,1440]) {
-      for(const gate of ['canplaythrough','frame-callback']) {
+    for(const width of (process.env.WIDTHS||'390,1440').split(',').map(Number)) {
+      for(const gate of ['canplaythrough','frame-callback','tap-permission']) {
         await check(`tour-${gate}`,width,async p => {
           await p.addInitScript(gate => {
             if(gate==='canplaythrough') document.addEventListener('canplaythrough',e=>e.stopImmediatePropagation(),true);
-            else {
+            else if(gate==='frame-callback') {
               HTMLVideoElement.prototype.requestVideoFrameCallback = () => 1;
               HTMLVideoElement.prototype.cancelVideoFrameCallback = () => {};
+            }else{
+              let directTap=false;
+              document.addEventListener('click',()=>{directTap=true;setTimeout(()=>{directTap=false;},0);},true);
+              const play=HTMLMediaElement.prototype.play;
+              const unlocked=new WeakSet();
+              HTMLMediaElement.prototype.play=function(){
+                if(directTap)unlocked.add(this);
+                if(!unlocked.has(this))return Promise.reject(new DOMException('A direct tap is required','NotAllowedError'));
+                return play.call(this);
+              };
             }
           },gate);
           await p.goto(`${base}/vinyl-preview.html`,{waitUntil:'domcontentloaded'});
-          await p.getByRole('button',{name:'Play the Farm villa tour',exact:true}).click();
+          const record=p.getByRole('button',{name:'Play the Farm villa tour',exact:true});
+          if(width<768)await record.tap();else await record.click();
           await p.waitForFunction(() => {
             const player=document.querySelector('.vinyl-player'),video=document.querySelector('video');
             return video&&!video.paused&&video.currentTime>.1&&Number(getComputedStyle(player).opacity)>.95;
@@ -63,7 +86,7 @@ async function footerLink(p, label) {
         await p.goto(`${base}/?page=dining`,{waitUntil:'domcontentloaded'});
         await footer(p);
         const from=await p.evaluate(()=>scrollY);
-        await p.mouse.wheel(0,90);
+        await scroll(p,90);
         await footerLink(p,'Home');
         assert.equal(new URL(p.url()).search,'');
         assert.ok(await p.evaluate(()=>scrollY<8),'Home must arrive at the top on the first click');
@@ -73,10 +96,27 @@ async function footerLink(p, label) {
         const returned=await p.evaluate(()=>scrollY);
         assert.ok(Math.abs(returned-from)<140,`Back must restore the footer, not the top: ${returned} vs ${from}`);
       });
+      if(width<768)await check('footer-late-viewport',width,async p=>{
+        await p.addInitScript(()=>{
+          const push=history.pushState.bind(history);
+          history.pushState=function(state,title,url){
+            const previous=history.state?.vacay?.y||0;
+            push(state,title,url);
+            // Simulate an embedded browser restoring its old native viewport after an SPA update.
+            if(previous>0){const restore=()=>{if(document.querySelector('.page-transition')?.dataset.active)setTimeout(restore,50);else window.scrollTo(0,previous);};setTimeout(restore,250);}
+          };
+        });
+        await p.goto(`${base}/?page=dining`,{waitUntil:'domcontentloaded'});
+        await footer(p);
+        const origin=await p.evaluate(()=>performance.timeOrigin);
+        await footerLink(p,'Farm');await sleep(p,600);
+        assert.notEqual(await p.evaluate(()=>performance.timeOrigin),origin,'Phone footer links must use a fresh document');
+        assert.ok(await p.evaluate(()=>scrollY<8),'A late native viewport restoration must not leave the new page at the footer');
+      });
       for(const label of ['Farm','Dining','Terrace']) {
         await check(`footer-${label.toLowerCase()}`,width,async p => {
           await p.goto(`${base}/${label==='Dining'?'':'?page=dining'}`,{waitUntil:'domcontentloaded'});
-          await footer(p); await p.mouse.wheel(0,90); await footerLink(p,label);
+          await footer(p); await scroll(p,90); await footerLink(p,label);
           if(label==='Terrace') {
             const position=await p.evaluate(()=>({text:document.querySelector('.reveal-property').getBoundingClientRect().top,nav:document.querySelector('.navigation').getBoundingClientRect().bottom}));
             assert.ok(position.text>position.nav+4,`Terrace heading is beneath navigation: ${JSON.stringify(position)}`);
@@ -109,7 +149,7 @@ async function footerLink(p, label) {
         const initially=await image.locator('.brush-reveal').evaluateAll(es=>es.map(e=>parseFloat(getComputedStyle(e).strokeDashoffset)));
         assert.ok(initially.every(x=>x>.95),'Food brush strokes must start unpainted');
         await image.evaluate(e=>window.scrollTo({top:e.getBoundingClientRect().top+scrollY-innerHeight*.8,behavior:'instant'}));
-        await p.mouse.wheel(0,220);await sleep(p,600);
+        await scroll(p,220);await sleep(p,600);
         const painted=await image.locator('.brush-reveal').evaluateAll(es=>es.map(e=>parseFloat(getComputedStyle(e).strokeDashoffset)));
         assert.ok(painted.some(x=>x<.9),'Food must paint as the user scrolls down');
       });
@@ -124,7 +164,7 @@ async function footerLink(p, label) {
             window.sampleFooter=true;
             const sample=()=>{if(!window.sampleFooter)return;window.scrollSamples.push({y:scrollY,height:document.documentElement.scrollHeight});requestAnimationFrame(sample);};sample();
           });
-          for(let i=0;i<5;i++){await p.mouse.wheel(0,130);await sleep(p,220);}
+          for(let i=0;i<5;i++){await scroll(p,130);await sleep(p,220);}
           await sleep(p,900);
           const samples=await p.evaluate(()=>{window.sampleFooter=false;return window.scrollSamples;});
           assert.ok(samples.length>5,'Scroll sampling must run');

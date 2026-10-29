@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -25,12 +25,45 @@ export function usePageNavigation(scroll:RefObject<Lenis|null>) {
  const positions=useRef(new Map<string,number>());
  const busy=useRef(false);
  const pending=useRef<{href:string;push:boolean}|null>(null);
+ const arrivalRef=useRef<boolean|null>(null);
  const reduced=useReducedMotion();
  const position=useCallback((y:number)=>{
   scroll.current?.resize();
   if(scroll.current)scroll.current.scrollTo(y,{immediate:true,force:true});
-  else window.scrollTo({top:y,behavior:'instant'});
+  else window.scrollTo(0,y);
  },[scroll]);
+ useLayoutEffect(()=>{
+  if(arrivalRef.current===null){
+   arrivalRef.current=false;
+   try{arrivalRef.current=sessionStorage.getItem('vacay:arrival')==='1';sessionStorage.removeItem('vacay:arrival');}catch{/* Storage may be disabled in private browsers. */}
+  }
+  const arrival=arrivalRef.current;
+  const saved=history.state?.vacay?.y??0;
+  if(!arrival&&!saved&&(!location.hash||location.hash==='#home'))return;
+  let alive=true;
+  const veil=transitionRef.current;
+  if(arrival&&veil){busy.current=true;veil.dataset.active='true';gsap.set(veil,{autoAlpha:1});}
+  void document.fonts.ready.then(async()=>{
+   await frame();await frame();if(!alive)return;
+   ScrollTrigger.refresh();
+   position(arrival?targetPosition(new URL(location.href)):saved||targetPosition(new URL(location.href)));
+   arrivalRef.current=false;
+   if(arrival&&veil){await gsap.to(veil,{autoAlpha:0,duration:reduced?.12:.42,ease:'power2.inOut'}).then();delete veil.dataset.active;busy.current=false;}
+  });
+  return()=>{alive=false;};
+ },[position,reduced]);
+ const navigateFooter=useCallback(async(url:URL)=>{
+  if(busy.current)return;
+  busy.current=true;
+  const outgoing={...active.current,y:window.scrollY};
+  history.replaceState({...history.state,vacay:outgoing},'');
+  const veil=transitionRef.current;
+  if(veil){veil.dataset.active='true';await gsap.to(veil,{autoAlpha:1,duration:reduced?.08:.24,ease:'power1.inOut'}).then();}
+  try{sessionStorage.setItem('vacay:arrival','1');}catch{/* Navigation still works without storage. */}
+  // A new document gives iPhone browsers a fresh native viewport, not the old footer offset.
+  history.pushState({...history.state,vacay:newEntry(outgoing.index+1)},'',url);
+  location.reload();
+ },[reduced]);
  const navigate=useCallback(async(href:string,push=true)=>{
   const url=new URL(href,location.href);
   if(url.origin!==location.origin)return;
@@ -78,11 +111,20 @@ export function usePageNavigation(scroll:RefObject<Lenis|null>) {
    const anchor=(event.target as Element)?.closest<HTMLAnchorElement>('a[href]');
    if(!anchor||anchor.target==='_blank'||anchor.hasAttribute('download'))return;
    const url=new URL(anchor.href,location.href);if(url.origin!==location.origin)return;
-   event.preventDefault();void navigate(url.href);
+   event.preventDefault();
+   if(anchor.closest('.vacay-footer')&&matchMedia('(hover:none) and (pointer:coarse)').matches)void navigateFooter(url);
+   else void navigate(url.href);
   };
   const pop=()=>{void navigate(location.href,false);};
+  const show=(event:PageTransitionEvent)=>{
+   if(!event.persisted)return;
+   busy.current=false;pending.current=null;
+   const veil=transitionRef.current;if(veil){gsap.set(veil,{autoAlpha:0});delete veil.dataset.active;}
+   position(history.state?.vacay?.y??0);
+  };
   document.addEventListener('click',click);window.addEventListener('popstate',pop);
-  return()=>{history.scrollRestoration=restoration;document.removeEventListener('click',click);window.removeEventListener('popstate',pop);};
- },[navigate]);
+  window.addEventListener('pageshow',show);
+  return()=>{history.scrollRestoration=restoration;document.removeEventListener('click',click);window.removeEventListener('popstate',pop);window.removeEventListener('pageshow',show);};
+ },[navigate,navigateFooter,position]);
  return {route:view.route,locationKey:view.key,navigate,back,transitionRef};
 }

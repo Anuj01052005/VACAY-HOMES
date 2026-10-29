@@ -13,6 +13,8 @@ export function VinylTour() {
   const video=useRef<HTMLVideoElement>(null);
   const spin=useRef<gsap.core.Tween|null>(null);
   const sequence=useRef<gsap.core.Timeline|null>(null);
+  const playback=useRef<Promise<void>|null>(null);
+  const entryTimer=useRef<number|undefined>(undefined);
   const [phase,setPhase]=useState<Phase>('idle');
   const [videoReady,setVideoReady]=useState(false);
   const [playbackError,setPlaybackError]=useState(false);
@@ -36,7 +38,7 @@ export function VinylTour() {
     if(root.current)observer.observe(root.current);
     const visibility=()=>{if(document.hidden)spin.current?.pause();else if(!reduced)spin.current?.resume();};
     document.addEventListener('visibilitychange',visibility);
-    return()=>{observer.disconnect();document.removeEventListener('visibilitychange',visibility);sequence.current?.kill();ctx.revert();};
+    return()=>{observer.disconnect();document.removeEventListener('visibilitychange',visibility);window.clearTimeout(entryTimer.current);playback.current=null;sequence.current?.kill();ctx.revert();};
   },[reduced]);
 
   useEffect(()=>{
@@ -70,29 +72,53 @@ export function VinylTour() {
       if(!element)return;
       let cancelled=false;
       let fade:gsap.core.Timeline|undefined;
+      let timeout:number|undefined;
+      let revealed=false;
       const reveal=()=>{
-        if(cancelled)return;
+        if(cancelled||revealed)return;
+        revealed=true;window.clearTimeout(timeout);
         // Crossfade only after play succeeds. Hidden-video frame callbacks can stall indefinitely.
         fade=gsap.timeline({defaults:{ease:'power1.inOut'}})
           .to(root.current?.querySelector('.vinyl-player')??null,{opacity:1,duration:reduced?.15:1.2},0)
           .to(scene.current,{opacity:0,duration:reduced?.15:1.2},0);
         element.focus({preventScroll:true});
       };
-      void element.play().then(()=>{
+      const showFromStart=()=>{
         if(cancelled)return;
-        reveal();
+        if(element.currentTime>.25){
+          element.addEventListener('seeked',reveal,{once:true});
+          element.currentTime=0;
+          timeout=window.setTimeout(()=>{if(!cancelled&&!element.paused)reveal();},1500);
+        }else reveal();
+      };
+      void (playback.current??element.play()).then(()=>{
+        if(cancelled)return;
+        showFromStart();
       }).catch(()=>{if(!cancelled)setPlaybackError(true);});
-      return()=>{cancelled=true;fade?.kill();};
+      return()=>{cancelled=true;fade?.kill();window.clearTimeout(timeout);element.removeEventListener('seeked',reveal);};
     }
   },[phase,videoReady,reduced,attempt]);
+
+  // iPhone WebViews may require play() inside the original tap, not an animation callback.
+  const playFromTap=()=>{
+    const element=video.current;if(!element)return;
+    element.muted=true;element.defaultMuted=true;element.playsInline=true;
+    const source=window.matchMedia('(min-width:768px)').matches?film.desktop:film.mobile;
+    if(element.getAttribute('src')!==source||element.error){element.src=source;element.load();}
+    element.preload='auto';
+    const request=element.play();playback.current=request;
+    void request.then(()=>{if(playback.current===request){setVideoReady(true);setPlaybackError(false);}})
+      .catch(()=>{if(playback.current===request)setPlaybackError(true);});
+  };
 
   const start=()=>{
     if(phase!=='idle')return;
     setVideoReady(false);
     setPlaybackError(false);
+    playFromTap();
     setPhase('loading');
     spin.current?.pause();
-    const enter=()=>{spin.current?.pause();setPhase('playing');};
+    const enter=()=>{window.clearTimeout(entryTimer.current);spin.current?.pause();setPhase('playing');};
     if(reduced){enter();return;}
     const q=gsap.utils.selector(root);
     const tl=gsap.timeline({defaults:{ease:'power3.inOut'},onComplete:enter});
@@ -104,9 +130,13 @@ export function VinylTour() {
       .to(q('.tonearm'),{autoAlpha:1,duration:.25},1.5)
       .to(q('.tonearm'),{rotation:0,duration:.85,ease:'power2.inOut'},1.65)
       .to(q('.status-glow'),{opacity:1,duration:.35},2.2);
+    // A throttled iPhone animation clock must not hold a ready video indefinitely.
+    entryTimer.current=window.setTimeout(()=>{if(sequence.current===tl)tl.progress(1);},3500);
   };
   const reset=()=>{
     if(phase==='closing')return;
+    window.clearTimeout(entryTimer.current);
+    playback.current=null;
     video.current?.pause();spin.current?.pause();
     setPhase('closing');
     const finish=()=>{
@@ -189,7 +219,7 @@ export function VinylTour() {
     <div className="vinyl-signature"><span className="vinyl-stars" aria-label="Five decorative stars">★★★★★</span><div className="vinyl-properties-action"><GlassLink className="vinyl-invitation" href="./?page=properties">Properties<span className="vinyl-invitation-light" aria-hidden="true"/></GlassLink></div><p className="vinyl-tagline">“A little away, a lot together.”</p></div>
     {(phase==='loading'||phase==='playing'&&(!videoReady||playbackError))&&<div className="vinyl-status" role="status">
       <p>{playbackError?'The tour could not start. Please try again.':phase==='loading'?'Setting the needle…':'Preparing your tour…'}</p>
-      {playbackError&&<button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);const element=video.current;if(!element)return;if(element.error){setVideoReady(false);element.load();}void element.play().then(()=>setAttempt(value=>value+1)).catch(()=>setPlaybackError(true));}}>Play tour</button>}
+      {playbackError&&<button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);playFromTap();setAttempt(value=>value+1);}}>Play tour</button>}
       <button className="vinyl-invitation glass" onClick={reset}>Close Tour</button>
     </div>}
   </section>;
