@@ -16,10 +16,11 @@ Scope: vh-rebuild, repository Anuj01052005/VACAY-HOMES, branch prototype/vh002-r
 - Malformed URL fragment decoding now falls back safely rather than throwing URIError.
 - Vercel response headers define a same-origin content security policy, block framing and MIME sniffing, limit referrer data, and disable unused camera/microphone/geolocation access. CSS inline styles remain enabled for the animation library. Hosting enforcement must be checked after deployment.
 
+## Publication approval
+The user explicitly approved proceeding to publication using the completed audits without a paid Strix pentest. No Strix scan was run and no scan credits were spent.
+
 ## Pending launch gates
-- Strix Cloud review and hosted-site verification remain pending.
-- Strix Cloud code review of the current pushed commit; review findings before changes. Strix CLI 1.7.0 is installed outside the website repository.
-- Vercel preview, live header check, and web-app pentest before final production publication.
+- Vercel deployment and live verification of pages, assets and security headers.
 
 ## Deployment settings
 Root directory: vh-rebuild. Framework: Vite. Build: npm run build. Output: build. No website runtime API key is required.
