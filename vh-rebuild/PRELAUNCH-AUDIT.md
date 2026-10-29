@@ -14,13 +14,19 @@ Scope: vh-rebuild, repository Anuj01052005/VACAY-HOMES, branch prototype/vh002-r
 
 ## Approved changes
 - Malformed URL fragment decoding now falls back safely rather than throwing URIError.
-- Vercel response headers define a same-origin content security policy, block framing and MIME sniffing, limit referrer data, and disable unused camera/microphone/geolocation access. CSS inline styles remain enabled for the animation library. Hosting enforcement must be checked after deployment.
+- Vercel response headers define a same-origin content security policy, block framing and MIME sniffing, limit referrer data, and disable unused camera/microphone/geolocation access. CSS inline styles remain enabled for the animation library. Hosting enforcement was checked successfully on the live Cloudflare deployment.
 
 ## Publication approval
 The user explicitly approved proceeding to publication using the completed audits without a paid Strix pentest. No Strix scan was run and no scan credits were spent.
 
-## Pending launch gates
-- Cloudflare Pages deployment and live verification of pages, assets and security headers.
+## Live deployment — verified
+- Permanent public URL: https://vacay-homes.pages.dev/
+- Checked deployment: https://8a689de2.vacay-homes.pages.dev/
+- Both URLs return HTTP 200 in a fresh unauthenticated browser and serve the same application bundle.
+- Live Home, Properties, Farm and Dining passed checks at 390, 768 and 1440 pixels: no observed page errors, failed page requests, broken loaded images, overflow or axe violations in the checked reduced-motion states.
+- Normal-motion carousel advance, tour playback with correct mobile/desktop video, and Close Tour passed at 390 and 1440 pixels.
+- Live CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy headers were verified.
+- Cloudflare rejects the default Python HTTP client with error 1010; normal unauthenticated browser access succeeded. No protection was weakened.
 
 ## Deployment settings
 Selected host: Cloudflare Pages (user-approved free hosting alternative). Root directory: vh-rebuild. Framework: Vite. Build: npm run build. Output: build. No website runtime API key is required. The same approved security headers are provided in public/_headers.
@@ -32,4 +38,4 @@ No browser favicon is configured; an explicit /favicon.ico request returns 404. 
 
 The build contains older optimized clips alongside the current clips (~65 MB total). They are not all downloaded by each visitor. Removing unused copies is optional housekeeping and was not performed during the audit.
 
-No audit can guarantee the absence of every security threat or future fault. No confirmed exploit has been found by the checks completed here; Strix results remain pending.
+No audit can guarantee the absence of every security threat or future fault. No confirmed exploit was found by the completed checks. The optional paid Strix scan was explicitly waived by the user; no Strix pentest result is claimed.
