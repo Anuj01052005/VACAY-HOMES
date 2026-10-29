@@ -20,10 +20,10 @@ Scope: vh-rebuild, repository Anuj01052005/VACAY-HOMES, branch prototype/vh002-r
 The user explicitly approved proceeding to publication using the completed audits without a paid Strix pentest. No Strix scan was run and no scan credits were spent.
 
 ## Pending launch gates
-- Vercel deployment and live verification of pages, assets and security headers.
+- Cloudflare Pages deployment and live verification of pages, assets and security headers.
 
 ## Deployment settings
-Root directory: vh-rebuild. Framework: Vite. Build: npm run build. Output: build. No website runtime API key is required.
+Selected host: Cloudflare Pages (user-approved free hosting alternative). Root directory: vh-rebuild. Framework: Vite. Build: npm run build. Output: build. No website runtime API key is required. The same approved security headers are provided in public/_headers.
 
 - Production runtime verification: malformed UTF-8 URL fragment navigation completed with no page errors; the configured response headers were present. No failed page requests were observed in the confirming run.
 
