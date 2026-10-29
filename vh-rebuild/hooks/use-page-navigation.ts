@@ -6,7 +6,10 @@ type ViewChange={finished:Promise<void>;skipTransition:()=>void};
 type TransitionDocument=Document&{startViewTransition?:(callback:()=>void)=>ViewChange};
 
 function scrollToLocation(url:URL,instant:boolean) {
-  const target=url.hash?document.getElementById(decodeURIComponent(url.hash.slice(1))):null;
+  const fragment=url.hash.slice(1);
+  let id=fragment;
+  try { id=decodeURIComponent(fragment); } catch { /* Treat malformed escapes as literal IDs. */ }
+  const target=id?document.getElementById(id):null;
   if(target){
     target.scrollIntoView({block:'start',behavior:instant?'instant':'smooth'});
     target.tabIndex=-1;target.focus({preventScroll:true});

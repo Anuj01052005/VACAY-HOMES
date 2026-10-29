@@ -50,7 +50,7 @@
 .property-coming>.coming-note {text-align:center;margin:0 0 24px}
 .vacay-footer .bwf-rule {display:none}
 .vacay-footer::before {content:'';position:absolute;inset:0 0 auto;height:120px;background:linear-gradient(var(--bwf-bg),transparent);z-index:1;pointer-events:none}
-@keyframes footer-tide {from{background-position:0% 25%;transform:scale(1)}to{background-position:100% 75%;transform:scale(1.08)}}
+@keyframes footer-tide {from{transform:translate3d(-2%,0,0) scale(1.04)}to{transform:translate3d(2%,0,0) scale(1.08)}}
 @media(max-width:760px){.vacay-footer .bwf-inner{grid-template-columns:1fr 1fr;gap:16px;padding-top:24px;padding-bottom:8px}.vacay-footer .bwf-col:first-child{grid-column:1/-1}.vacay-footer .bwf-word-box{padding-inline:var(--footer-edge)}}
 @media(max-width:760px) and (max-height:700px){
  .vacay-footer .bwf-inner{grid-template-columns:minmax(0,2fr) minmax(0,1fr);column-gap:16px;row-gap:12px}
@@ -76,3 +76,9 @@
 .rules-list li:last-child {border-bottom:0}
 .rules-list strong {display:block;margin-bottom:3px;font-weight:700}
 .rules-list span {color:#d5d2de}
+
+
+/* Keep animated paint surfaces independent from the footer's scrolling content. */
+.vacay-footer .bwf-sky {contain:layout paint;transform:translateZ(0)}
+.vacay-footer .bwf-beam,.vacay-footer .bwf-glow {will-change:transform;transform:translateZ(0)}
+.vacay-footer .bwf-l {will-change:translate}

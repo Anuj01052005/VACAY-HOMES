@@ -24,7 +24,7 @@ export function PropertiesPage() {
   },[dedicated,reduced]);
   return <main id="home" className={`property-page${dedicated?' property-page-dedicated':''}`}>
     <div ref={opening} className="property-opening">
-    <header className="property-page-header">{!dedicated&&<p>Properties</p>}<h1>{dedicated?<><span className="property-heading-code">Farm</span></>:'Vacay Homes'}</h1></header>
+    <header className="property-page-header">{dedicated&&<p>Properties</p>}<h1>{dedicated?<strong className="property-heading-code">Farm</strong>:'Properties'}</h1></header>
     {dedicated&&<div className="property-introduction">
       <div className="property-cover dedicated-cover"><img src={content.gallery[0].img} alt={content.gallery[0].alt}/><span className="property-id-badge glass">Farm</span></div>
       <div className="property-detail-glass glass"><FeatureLinks dedicated/></div>

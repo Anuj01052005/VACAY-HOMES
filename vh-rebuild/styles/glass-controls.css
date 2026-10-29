@@ -90,6 +90,6 @@
 .feature-video-heading h3 {font:inherit;margin:0}
 .feature-video-heading>span {font-size:var(--photo-tag-size);letter-spacing:.06em;color:var(--gallery-muted)}
 .property-film video {display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--gallery-radius);background:var(--surface)}
-html:has(.property-page) {scroll-behavior:smooth}
+html:has(.property-page) {scroll-behavior:auto}
 @media(min-width:600px) {.property-detail-glass .feature-navigation {grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce) {html:has(.property-page) {scroll-behavior:auto}}

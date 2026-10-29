@@ -93,3 +93,5 @@
   .vinyl-scroll-sticky {position:relative;height:auto;overflow:visible}
   .vinyl-scroll-sticky .vinyl-tour {min-height:100svh;height:auto}
 }
+
+.vinyl-tour[data-tour-active=true] .vinyl-aurora,.vinyl-tour[data-tour-active=true] .vinyl-invitation-light {animation-play-state:paused}

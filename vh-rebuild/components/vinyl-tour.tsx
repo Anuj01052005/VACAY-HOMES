@@ -15,7 +15,6 @@ export function VinylTour() {
   const sequence=useRef<gsap.core.Timeline|null>(null);
   const [phase,setPhase]=useState<Phase>('idle');
   const [videoReady,setVideoReady]=useState(false);
-  const playbackAllowed=useRef(false);
   const reduced=useReducedMotion();
   const id=useId().replaceAll(':','');
   const film=content.fullTour;
@@ -43,13 +42,12 @@ export function VinylTour() {
     const element=video.current;
     if(!element)return;
     let cancelled=false;
-    const firstFrame=()=>{
-      const ready=()=>{if(!cancelled){if(!playbackAllowed.current)element.pause();setVideoReady(true);}};
-      if(element.requestVideoFrameCallback)element.requestVideoFrameCallback(ready);
-      else requestAnimationFrame(ready);
-    };
-    element.addEventListener('playing',firstFrame,{once:true});
-    void element.play().catch(()=>{});
+    // Buffer before exposing the player; never play/pause a hidden first frame.
+    const ready=()=>{if(!cancelled)setVideoReady(true);};
+    element.addEventListener('canplaythrough',ready);
+    element.preload='auto';
+    if(element.networkState===HTMLMediaElement.NETWORK_EMPTY)element.load();
+    if(element.readyState===HTMLMediaElement.HAVE_ENOUGH_DATA)ready();
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')reset();};
     let resumeOnReturn=false;
     const visibility=()=>{
@@ -58,7 +56,7 @@ export function VinylTour() {
     };
     document.addEventListener('keydown',escape);
     document.addEventListener('visibilitychange',visibility);
-    return()=>{cancelled=true;element.pause();element.removeEventListener('playing',firstFrame);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
+    return()=>{cancelled=true;element.pause();element.removeEventListener('canplaythrough',ready);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
   },[phase==='loading'||phase==='playing']);
 
   useEffect(()=>{
@@ -88,10 +86,9 @@ export function VinylTour() {
   const start=()=>{
     if(phase!=='idle')return;
     setVideoReady(false);
-    playbackAllowed.current=false;
     setPhase('loading');
     spin.current?.pause();
-    const enter=()=>{playbackAllowed.current=true;spin.current?.resume();setPhase('playing');};
+    const enter=()=>{spin.current?.pause();setPhase('playing');};
     if(reduced){enter();return;}
     const q=gsap.utils.selector(root);
     const tl=gsap.timeline({defaults:{ease:'power3.inOut'},onComplete:enter});
@@ -122,7 +119,7 @@ export function VinylTour() {
     }});
   };
 
-  return <section ref={root} className="vinyl-tour" aria-labelledby={`${id}-title`}>
+  return <section ref={root} className="vinyl-tour" data-tour-active={phase==='playing'||undefined} aria-labelledby={`${id}-title`}>
     <div className="vinyl-aurora" aria-hidden="true"/>
     <div className="vinyl-intro"><h2 id={`${id}-title`} className="vinyl-title">Your stay.<br/><em>On the record.</em></h2>
       <button className="vinyl-invitation glass silver-trace" onClick={start} disabled={phase!=='idle'}>Click on the record for a tour of your stay<span className="vinyl-invitation-light" aria-hidden="true"/></button>
@@ -180,8 +177,8 @@ export function VinylTour() {
             </g>
         </svg>
       </button>
-      {(phase!=='idle')&&<div className="vinyl-player" data-visible={phase==='playing'&&videoReady||undefined} role="region" aria-label="Farm video tour">
-        <div className="vinyl-video-frame"><video ref={video} muted loop playsInline preload="auto" poster={film.poster} tabIndex={0} aria-label="Full Farm villa tour"><source src={film.desktop} media="(min-width:768px)" type="video/mp4"/><source src={film.mobile} type="video/mp4"/></video></div>
+      {<div className="vinyl-player" aria-hidden={phase!=='playing'} inert={phase!=='playing'} data-visible={phase==='playing'&&videoReady||undefined} role="region" aria-label="Farm video tour">
+        <div className="vinyl-video-frame"><video ref={video} muted loop playsInline preload="none" poster={film.poster} tabIndex={0} aria-label="Full Farm villa tour"><source src={film.desktop} media="(min-width:768px)" type="video/mp4"/><source src={film.mobile} type="video/mp4"/></video></div>
         <div className="vinyl-player-controls"><button className="vinyl-invitation glass silver-trace" onClick={reset} disabled={phase==='closing'}>Close Tour<span className="vinyl-invitation-light" aria-hidden="true"/></button></div>
       </div>}
     </div>

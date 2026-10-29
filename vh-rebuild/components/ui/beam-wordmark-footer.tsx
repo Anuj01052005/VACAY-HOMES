@@ -335,9 +335,16 @@ export default function BeamWordmarkFooter({
       const root = rootRef.current
       if (!root) return
       const ctx = gsap.context(() => {
-        gsap.utils.toArray<HTMLElement>('.bwf-label,.bwf-fade,.bwf-lw', root).forEach(el => {
-          gsap.fromTo(el, {y:18,opacity:0}, {y:0,opacity:1,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 98%',end:'clamp(top 80%)',scrub:.4,invalidateOnRefresh:true}})
-        })
+        // One stable container owns the reveal. Per-letter triggers near the
+        // document end can have their ranges clamped to zero and snap instantly.
+        const items = root.querySelectorAll('.bwf-label,.bwf-fade')
+        const letters = root.querySelectorAll('.bwf-lw')
+        gsap.timeline({scrollTrigger:{
+          trigger:root,start:'clamp(top 95%)',end:'clamp(top 40%)',
+          scrub:.55,invalidateOnRefresh:true,
+        }})
+          .fromTo(items,{y:14,opacity:0},{y:0,opacity:1,duration:1,stagger:{amount:.25},ease:'none'},0)
+          .fromTo(letters,{y:18,opacity:0},{y:0,opacity:1,duration:1,stagger:{amount:.18},ease:'none'},.12)
       }, root)
       return () => ctx.revert()
     })
@@ -393,7 +400,11 @@ export default function BeamWordmarkFooter({
       frame = requestAnimationFrame(fit)
     }
     fit()
-    const ro = new ResizeObserver(schedule)
+    let lastWidth = root.clientWidth
+    const ro = new ResizeObserver(() => {
+      const width = root.clientWidth
+      if (width !== lastWidth) { lastWidth = width; schedule() }
+    })
     ro.observe(root)
     let alive = true
     document.fonts?.ready.then(() => alive && schedule())
@@ -430,13 +441,18 @@ export default function BeamWordmarkFooter({
     return () => mq.removeEventListener("change", onMq)
   }, [])
 
+
   React.useEffect(() => {
     const root = rootRef.current
     if (!root) return
     const letters = Array.from(root.querySelectorAll<HTMLElement>('.bwf-l'))
+    const lightLayers = Array.from(root.querySelectorAll<HTMLElement>('.bwf-beam,.bwf-glow,.bwf-rule'))
+    const paintTargets = [...lightLayers, ...letters]
+    let width = root.clientWidth, height = root.clientHeight
+    let low = 0, high = 100
     let metrics: {el:HTMLElement;position:number;lift:number}[] = []
     const measureLetters = () => {
-      const w = root.clientWidth, h = root.clientHeight
+      const w = width = root.clientWidth, h = height = root.clientHeight
       const angle = 118 * Math.PI / 180
       const sx = Math.sin(angle), sy = -Math.cos(angle)
       const extent = Math.abs(w * sx) + Math.abs(h * sy)
@@ -447,13 +463,22 @@ export default function BeamWordmarkFooter({
       })
     }
     measureLetters()
-    const letterResize = new ResizeObserver(measureLetters)
+    low = Math.min(...metrics.map(letter => letter.position)) - 7
+    high = Math.max(...metrics.map(letter => letter.position)) + 7
+    const letterResize = new ResizeObserver(() => {
+      measureLetters()
+      low = Math.min(...metrics.map(letter => letter.position)) - 7
+      high = Math.max(...metrics.map(letter => letter.position)) + 7
+    })
     letterResize.observe(root)
     const set = (b: number, px: number, py: number, g: number) => {
-      root.style.setProperty("--bwf-b", b.toFixed(2) + "%")
-      root.style.setProperty("--bwf-px", px.toFixed(1) + "px")
-      root.style.setProperty("--bwf-py", py.toFixed(1) + "px")
-      root.style.setProperty("--bwf-g", g.toFixed(3))
+      // Scope changing paint values to their consumers; do not invalidate links/layout.
+      for (const target of paintTargets) {
+        target.style.setProperty("--bwf-b", b.toFixed(2) + "%")
+        target.style.setProperty("--bwf-px", px.toFixed(1) + "px")
+        target.style.setProperty("--bwf-py", py.toFixed(1) + "px")
+        target.style.setProperty("--bwf-g", g.toFixed(3))
+      }
       metrics.forEach(({el,position,lift}) => {
         const influence = reduced ? 0 : Math.exp(-Math.pow((position-b)/5,2))
         el.style.setProperty('--beam-lift', `${(-lift*influence).toFixed(2)}px`)
@@ -477,12 +502,10 @@ export default function BeamWordmarkFooter({
       last = now
       t += dt
       // Sweep the existing ray across the complete wordmark without pointer input.
-      const low = Math.min(...metrics.map(letter => letter.position)) - 7
-      const high = Math.max(...metrics.map(letter => letter.position)) + 7
-      // One complete left-to-right pass takes eight seconds, then reverses.
+      // One complete left-to-right pass takes twelve seconds, then reverses.
       b = low + (high - low) * (.5 - .5 * Math.cos(Math.PI * t / 12))
-      const w = root.clientWidth
-      const h = root.clientHeight
+      const w = width
+      const h = height
       px = approach(px, w * (.5 + .32 * Math.sin(t * .17)), 0.035, dt)
       py = approach(py, h * (.48 + .28 * Math.cos(t * .13)), 0.035, dt)
       g = approach(g, .65, 0.06, dt)
@@ -621,7 +644,7 @@ export default function BeamWordmarkFooter({
         <div className="bwf-word-box">
         <div ref={innerRef} className="bwf-word-in" aria-hidden="true">
           {letters.map((ch, i) => (
-            <span key={i} className="bwf-lw" style={{ "--bwf-d": 260 + i * 75 + "ms" } as React.CSSProperties}>
+            <span key={i} className="bwf-lw" style={{ "--bwf-d": 260 + i * 75 + "ms", "--letter-index": i } as React.CSSProperties}>
               <span className="bwf-l">
                 {ch === " " ? " " : ch}
               </span>

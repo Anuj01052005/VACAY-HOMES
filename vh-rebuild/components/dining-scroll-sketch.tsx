@@ -45,10 +45,11 @@ export function DiningScrollSketch({kind}:{kind:Kind}){
    ScrollTrigger.create({trigger,start:'top 95%',end:'bottom 5%',invalidateOnRefresh:true,
     onUpdate:self=>{
      const current=self.scroll();
-     if(self.isActive)render(painted+(current-lastScroll)/distance());
+     if(self.isActive && current>lastScroll)render(painted+(current-lastScroll)/distance());
+     else if(self.isActive && current<lastScroll)render(1);
      lastScroll=current;
     },
-    onLeave:()=>render(1),onLeaveBack:()=>render(0),
+    onLeave:()=>render(1),onLeaveBack:()=>render(1),
     onRefresh:self=>{lastScroll=self.scroll();},
    });
   },root);
