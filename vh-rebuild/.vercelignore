@@ -2,7 +2,7 @@ node_modules
 build
 qa
 qa-results
-assets
+/assets/
 .local-media-archive
 .21st
 tools
