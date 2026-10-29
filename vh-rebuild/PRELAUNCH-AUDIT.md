@@ -17,14 +17,18 @@ Scope: vh-rebuild, repository Anuj01052005/VACAY-HOMES, branch prototype/vh002-r
 - Vercel response headers define a same-origin content security policy, block framing and MIME sniffing, limit referrer data, and disable unused camera/microphone/geolocation access. CSS inline styles remain enabled for the animation library. Hosting enforcement must be checked after deployment.
 
 ## Pending launch gates
-- Investigate one generic 404 console message in the phone media check (all explicitly tested carousel assets loaded).
+- Strix Cloud review and hosted-site verification remain pending.
 - Strix Cloud code review of the current pushed commit; review findings before changes. Strix CLI 1.7.0 is installed outside the website repository.
 - Vercel preview, live header check, and web-app pentest before final production publication.
 
 ## Deployment settings
 Root directory: vh-rebuild. Framework: Vite. Build: npm run build. Output: build. No website runtime API key is required.
 
+- Production runtime verification: malformed UTF-8 URL fragment navigation completed with no page errors; the configured response headers were present. No failed page requests were observed in the confirming run.
+
 ## Observations
+No browser favicon is configured; an explicit /favicon.ico request returns 404. This is a cosmetic omission, not a broken property image. It was reported and left unchanged.
+
 The build contains older optimized clips alongside the current clips (~65 MB total). They are not all downloaded by each visitor. Removing unused copies is optional housekeeping and was not performed during the audit.
 
 No audit can guarantee the absence of every security threat or future fault. No confirmed exploit has been found by the checks completed here; Strix results remain pending.
