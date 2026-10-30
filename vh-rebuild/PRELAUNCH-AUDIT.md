@@ -58,3 +58,10 @@ No audit can guarantee the absence of every security threat or future fault. No 
 - The previous video implementation failed a restrictive direct-tap media-permission test. Playback now starts inside the original tap, using an explicit device-appropriate source and inline/muted settings. The video returns to its beginning before crossfading in. A bounded GSAP entry handoff prevents a throttled animation clock from blocking a ready video.
 - Added a simulated late viewport-restoration test, native-navigation/Back checks, and video-state diagnostics on regression failures. Mobile toolbar-only resizes no longer force ScrollTrigger recalculation; Dining parallax remains page-specific.
 - Physical iPhone/Arc confirmation is still required; automated WebKit is not the Arc app running on iPhone hardware.
+
+## Contact, fixed theme and stalled-player recovery
+
+- User clarified the new contact as +91 9180119721. WhatsApp inquiry, footer WhatsApp and call links share the updated config; the call accessibility label is derived from it rather than a hardcoded old number. Dining contacts remain separate.
+- Both entry documents now declare `color-scheme: only dark`, matching the CSS. Light/dark OS preference checks preserve the same palette. Chrome automatic-darkening checks preserve the hero screenshot pixels. This does not promise control over Samsung's forced recolouring or accessibility overrides.
+- Reproduced a player remaining invisible with phase=playing, readyState=4 and paused=true when a browser never settles play(). The frame and poster now appear independently of the playback promise. A visible Play tour action and direct native-video link provide recovery while Close Tour remains available.
+- Nine focused production-preview checks passed: theme/contact, stalled-player recovery and direct-tap playback at mobile WebKit, mobile Chrome and desktop Chrome. TypeScript and production build passed. Physical iPhone/Arc confirmation remains outstanding.

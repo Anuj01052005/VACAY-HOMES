@@ -52,6 +52,40 @@ async function footerLink(p, label) {
   }
   try {
     for(const width of (process.env.WIDTHS||'390,1440').split(',').map(Number)) {
+      await check('theme-contact',width,async p=>{
+        await p.emulateMedia({colorScheme:'light',reducedMotion:'reduce'});
+        await p.goto(`${base}/`,{waitUntil:'domcontentloaded'});
+        await p.locator('.nav-brand').waitFor();await p.evaluate(()=>document.fonts.ready);await sleep(p,400);
+        assert.equal(await p.locator('meta[name="color-scheme"]').getAttribute('content'),'only dark');
+        const palette=()=>p.evaluate(()=>['body','.nav-brand','.title-letter'].map(selector=>{const s=getComputedStyle(document.querySelector(selector));return {color:s.color,fill:s.webkitTextFillColor,background:s.backgroundColor};}));
+        const light=await palette();
+        await p.emulateMedia({colorScheme:'dark'});await sleep(p,150);
+        assert.deepEqual(await palette(),light,'System appearance must not change the site palette');
+        if(engine==='chromium'){
+          const before=await p.screenshot({animations:'disabled'});
+          const session=await p.context().newCDPSession(p);
+          await session.send('Emulation.setAutoDarkModeOverride',{enabled:true});await sleep(p,150);
+          assert.ok(before.equals(await p.screenshot({animations:'disabled'})),'Browser automatic darkening must preserve the hero pixels');
+        }
+        assert.equal(await p.getByRole('link',{name:/^Call \+/}).getAttribute('href'),'tel:+919180119721');
+        assert.ok((await p.getByRole('link',{name:'WhatsApp',exact:true}).getAttribute('href')).startsWith('https://wa.me/919180119721'));
+        await p.getByRole('button',{name:'Inquire',exact:true}).click();
+        assert.equal((await p.locator('.inquiry-number').innerText()).trim(),'+919180119721');
+      });
+      await check('tour-recovery',width,async p=>{
+        await p.addInitScript(()=>{HTMLMediaElement.prototype.play=function(){return new Promise(()=>{});};});
+        await p.goto(`${base}/vinyl-preview.html`,{waitUntil:'domcontentloaded'});
+        const record=p.getByRole('button',{name:'Play the Farm villa tour',exact:true});
+        if(width<768)await record.tap();else await record.click();
+        await p.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.vinyl-player')).opacity)>.95,null,{timeout:8000});
+        assert.ok(await p.getByRole('button',{name:'Play tour',exact:true}).isVisible(),'A blocked video must have an accessible tap-to-play recovery');
+        const direct=p.getByRole('link',{name:'Open video directly',exact:true});
+        assert.ok(await direct.isVisible());
+        const response=await p.request.head(await direct.getAttribute('href').then(href=>new URL(href,base).href));
+        assert.equal(response.status(),200);
+        await p.getByRole('region',{name:'Farm video tour',exact:true}).getByRole('button',{name:'Close Tour',exact:true}).click();
+        await p.waitForFunction(()=>document.querySelector('.vinyl-stage').dataset.phase==='idle');
+      });
       for(const gate of ['canplaythrough','frame-callback','tap-permission']) {
         await check(`tour-${gate}`,width,async p => {
           await p.addInitScript(gate => {
@@ -135,7 +169,7 @@ async function footerLink(p, label) {
       }
       await check('footer-call-label',width,async p => {
         await p.goto(`${base}/?page=dining`,{waitUntil:'domcontentloaded'}); await footer(p);
-        const call=p.getByRole('link',{name:'Call +91 8050659721',exact:true}); await call.hover(); await sleep(p,300);
+        const call=p.getByRole('link',{name:/^Call \+/}); await call.hover(); await sleep(p,300);
         const overlaps=await call.locator('.bwf-tip').evaluate(e=>{
           const s=getComputedStyle(e);if(s.display==='none'||Number(s.opacity)<.1)return false;
           const a=e.getBoundingClientRect(),b=e.closest('.bwf-col').querySelector('.bwf-credits').getBoundingClientRect();

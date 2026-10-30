@@ -16,7 +16,7 @@ export function VinylTour() {
   const playback=useRef<Promise<void>|null>(null);
   const entryTimer=useRef<number|undefined>(undefined);
   const [phase,setPhase]=useState<Phase>('idle');
-  const [videoReady,setVideoReady]=useState(false);
+  const [videoPlaying,setVideoPlaying]=useState(false);
   const [playbackError,setPlaybackError]=useState(false);
   const [attempt,setAttempt]=useState(0);
   const reduced=useReducedMotion();
@@ -46,58 +46,38 @@ export function VinylTour() {
     const element=video.current;
     if(!element)return;
     let cancelled=false;
-    // A decoded first frame is enough; canplaythrough is not reliable for mobile streaming.
-    const ready=()=>{if(!cancelled)setVideoReady(true);};
     const failed=()=>{if(!cancelled)setPlaybackError(true);};
-    element.addEventListener('loadeddata',ready);
-    element.addEventListener('canplay',ready);
     element.addEventListener('error',failed);
     element.preload='auto';
     if(element.networkState===HTMLMediaElement.NETWORK_EMPTY)element.load();
-    if(element.readyState>=HTMLMediaElement.HAVE_CURRENT_DATA)ready();
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')reset();};
     let resumeOnReturn=false;
     const visibility=()=>{
       if(document.hidden){resumeOnReturn=!element.paused;element.pause();}
-      else if(resumeOnReturn)void element.play().catch(()=>{});
+      else if(resumeOnReturn)void element.play().catch(()=>{if(!cancelled)setPlaybackError(true);});
     };
     document.addEventListener('keydown',escape);
     document.addEventListener('visibilitychange',visibility);
-    return()=>{cancelled=true;element.pause();element.removeEventListener('loadeddata',ready);element.removeEventListener('canplay',ready);element.removeEventListener('error',failed);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
+    return()=>{cancelled=true;element.pause();element.removeEventListener('error',failed);document.removeEventListener('keydown',escape);document.removeEventListener('visibilitychange',visibility);};
   },[phase==='loading'||phase==='playing']);
 
   useEffect(()=>{
-    if(phase==='playing'&&videoReady){
+    if(phase==='playing'){
       const element=video.current;
       if(!element)return;
       let cancelled=false;
-      let fade:gsap.core.Timeline|undefined;
-      let timeout:number|undefined;
-      let revealed=false;
-      const reveal=()=>{
-        if(cancelled||revealed)return;
-        revealed=true;window.clearTimeout(timeout);
-        // Crossfade only after play succeeds. Hidden-video frame callbacks can stall indefinitely.
-        fade=gsap.timeline({defaults:{ease:'power1.inOut'}})
+      // Expose the poster and recovery controls even when a WebView never settles play().
+      const fade=gsap.timeline({defaults:{ease:'power1.inOut'}})
           .to(root.current?.querySelector('.vinyl-player')??null,{opacity:1,duration:reduced?.15:1.2},0)
           .to(scene.current,{opacity:0,duration:reduced?.15:1.2},0);
-        element.focus({preventScroll:true});
-      };
-      const showFromStart=()=>{
-        if(cancelled)return;
-        if(element.currentTime>.25){
-          element.addEventListener('seeked',reveal,{once:true});
-          element.currentTime=0;
-          timeout=window.setTimeout(()=>{if(!cancelled&&!element.paused)reveal();},1500);
-        }else reveal();
-      };
+      element.focus({preventScroll:true});
       void (playback.current??element.play()).then(()=>{
         if(cancelled)return;
-        showFromStart();
+        if(element.currentTime>.25)element.currentTime=0;
       }).catch(()=>{if(!cancelled)setPlaybackError(true);});
-      return()=>{cancelled=true;fade?.kill();window.clearTimeout(timeout);element.removeEventListener('seeked',reveal);};
+      return()=>{cancelled=true;fade.kill();};
     }
-  },[phase,videoReady,reduced,attempt]);
+  },[phase,reduced,attempt]);
 
   // iPhone WebViews may require play() inside the original tap, not an animation callback.
   const playFromTap=()=>{
@@ -107,13 +87,13 @@ export function VinylTour() {
     if(element.getAttribute('src')!==source||element.error){element.src=source;element.load();}
     element.preload='auto';
     const request=element.play();playback.current=request;
-    void request.then(()=>{if(playback.current===request){setVideoReady(true);setPlaybackError(false);}})
+    void request.then(()=>{if(playback.current===request)setPlaybackError(false);})
       .catch(()=>{if(playback.current===request)setPlaybackError(true);});
   };
 
   const start=()=>{
     if(phase!=='idle')return;
-    setVideoReady(false);
+    setVideoPlaying(false);
     setPlaybackError(false);
     playFromTap();
     setPhase('loading');
@@ -211,15 +191,16 @@ export function VinylTour() {
             </g>
         </svg>
       </button>
-      {<div className="vinyl-player" aria-hidden={phase!=='playing'} inert={phase!=='playing'} data-visible={phase==='playing'&&videoReady||undefined} role="region" aria-label="Farm video tour">
-        <div className="vinyl-video-frame"><video ref={video} muted loop playsInline preload="none" poster={film.poster} tabIndex={0} aria-label="Full Farm villa tour"><source src={film.desktop} media="(min-width:768px)" type="video/mp4"/><source src={film.mobile} type="video/mp4"/></video></div>
+      {<div className="vinyl-player" aria-hidden={phase!=='playing'} inert={phase!=='playing'} data-visible={phase==='playing'||undefined} role="region" aria-label="Farm video tour">
+        <div className="vinyl-video-frame"><video ref={video} muted loop playsInline preload="none" poster={film.poster} tabIndex={0} onPlaying={()=>setVideoPlaying(true)} onPause={()=>setVideoPlaying(false)} aria-label="Full Farm villa tour"><source src={film.desktop} media="(min-width:768px)" type="video/mp4"/><source src={film.mobile} type="video/mp4"/></video>
+          {phase==='playing'&&(!videoPlaying||playbackError)&&<div className="vinyl-recovery"><p role="status">{playbackError?'Your browser could not start the tour.':'Start your tour'}</p><button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);playFromTap();setAttempt(value=>value+1);}}>Play tour</button><a className="vinyl-direct" href={film.mobile} target="_blank" rel="noopener noreferrer">Open video directly</a></div>}
+        </div>
         <div className="vinyl-player-controls"><button className="vinyl-invitation glass silver-trace" onClick={reset} disabled={phase==='closing'}>Close Tour<span className="vinyl-invitation-light" aria-hidden="true"/></button></div>
       </div>}
     </div>
     <div className="vinyl-signature"><span className="vinyl-stars" aria-label="Five decorative stars">★★★★★</span><div className="vinyl-properties-action"><GlassLink className="vinyl-invitation" href="./?page=properties">Properties<span className="vinyl-invitation-light" aria-hidden="true"/></GlassLink></div><p className="vinyl-tagline">“A little away, a lot together.”</p></div>
-    {(phase==='loading'||phase==='playing'&&(!videoReady||playbackError))&&<div className="vinyl-status" role="status">
-      <p>{playbackError?'The tour could not start. Please try again.':phase==='loading'?'Setting the needle…':'Preparing your tour…'}</p>
-      {playbackError&&<button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);playFromTap();setAttempt(value=>value+1);}}>Play tour</button>}
+    {phase==='loading'&&<div className="vinyl-status" role="status">
+      <p>Setting the needle…</p>
       <button className="vinyl-invitation glass" onClick={reset}>Close Tour</button>
     </div>}
   </section>;

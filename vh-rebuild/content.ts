@@ -2,7 +2,7 @@ export const content = {
   brand: 'Vacay Homes',
   heroImage: './assets/pool-hero.webp',
   imageAlt: 'The illuminated pool at VACAY HOMES, framed by the terrace, with wicker chairs and palms under the night sky.',
-  whatsappNumber: '918050659721', // Country code + number, digits only.
+  whatsappNumber: '919180119721', // Country code + number, digits only.
   inquiryMessage: 'Hi, I went through the website and I want to book this villa.',
   footer: {email:'askvacaytion@gmail.com',instagramUrl:'https://www.instagram.com/vacayhomes.in/'},
   property002Location:'https://maps.app.goo.gl/Jw37pZzZLH6zMia4A?g_st=ic',
