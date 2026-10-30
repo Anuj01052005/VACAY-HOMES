@@ -12,7 +12,7 @@ export const content = {
   seasonalMessage: '',
   ripple: {speed:0.45,scale:7,illumination:0.04,surfaceDistortion:0.018,waterDistortion:0.012},
   propertiesButton: 'Properties',
-  fullTour: {desktop:'./assets/films/tour-smooth-1080.mp4',mobile:'./assets/films/tour-smooth-720.mp4',poster:'./assets/carousel/aerial-night.webp'},
+  fullTour: {desktop:'./assets/films/tour-smooth-1080.mp4',mobile:'./assets/films/tour-iphone-test.mp4',poster:'./assets/carousel/aerial-night.webp'},
   property002Features: ['Pool', 'Lawn', 'Patio', 'Gazebo'],
   property002Films: [
     {id:'pool',label:'Pool',mobile:'./assets/films/pool-night-720-4s.mp4',desktop:'./assets/films/pool-night-1280-4s.mp4',poster:'./assets/films/pool-night-720.jpg'},
