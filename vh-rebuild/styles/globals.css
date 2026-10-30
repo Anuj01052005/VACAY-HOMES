@@ -17,3 +17,8 @@
 @media(max-height:500px) and (orientation:landscape){:root{--hero-size:13vh;--title-bottom:38px}.title-stack{grid-template-columns:repeat(5,.7em)}}
 @media(prefers-reduced-motion:reduce){.hero-scene{height:100svh}.hero-viewport{position:relative}.hero-photo{transform:none!important}.ripple-image canvas{display:none}.letter-pair{transform:none!important;opacity:1!important;visibility:visible!important;will-change:auto}.text-shimmer{background:none;-webkit-text-fill-color:var(--foreground)}.dropdown,.dropdown[data-state=closed]{animation:none}.menu-icon i{transition:none}}
 @supports not (backdrop-filter:blur(8px)){.glass{background:var(--glass-readable)}}
+
+/* Keep the original lettering visible even if a browser alters clipped gradients. */
+.title-letter.text-shimmer{position:relative;background:none;color:var(--foreground);-webkit-text-fill-color:var(--foreground)}
+.title-letter.text-shimmer::after{content:attr(data-letter);position:absolute;inset:0;background-image:linear-gradient(90deg,transparent calc(50% - var(--spread)),var(--highlight),transparent calc(50% + var(--spread)));background-size:250% 100%;background-position:var(--shimmer-position,100%) center;background-repeat:no-repeat;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.title-letter.text-shimmer::after{display:none}}

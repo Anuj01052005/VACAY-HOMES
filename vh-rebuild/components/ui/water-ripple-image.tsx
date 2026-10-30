@@ -51,7 +51,7 @@ void main(){
 export function WaterRippleImage({src,alt,className='',paused=false,speed=.45,scale=7,illumination=.04,surfaceDistortion=.018,waterDistortion=.012}:WaterRippleImageProps){
  const canvasRef=useRef<HTMLCanvasElement>(null);
  const pausedRef=useRef(paused);pausedRef.current=paused;
- const reduced=useReducedMotion();const [ready,setReady]=useState(false);
+ const reduced=useReducedMotion();const [ready,setReady]=useState(false);const [contextVersion,setContextVersion]=useState(0);
  useEffect(()=>{
   setReady(false);if(reduced)return;
   const canvas=canvasRef.current!;const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:'low-power'});if(!gl)return;
@@ -71,9 +71,11 @@ export function WaterRippleImage({src,alt,className='',paused=false,speed=.45,sc
   const visibility=new IntersectionObserver(([entry])=>{inView=entry.isIntersecting;});visibility.observe(canvas);
   const img=new Image();img.onload=()=>{if(disposed||lost)return;try{texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.uniform1i(uniforms.image,0);gl.uniform1f(uniforms.img_ratio,img.naturalWidth/img.naturalHeight);loaded=true;resize();setReady(true);}catch{setReady(false);}};img.src=src;
   const tick=(now:number,delta:number)=>{if(document.hidden||pausedRef.current||!inView||!loaded||lost)return;time+=Math.min(delta,64)*.002*speed;if(now-lastDraw<1/30)return;lastDraw=now;draw();};gsap.ticker.add(tick);
-  const onLost=(event:Event)=>{event.preventDefault();lost=true;setReady(false);};canvas.addEventListener('webglcontextlost',onLost);
-  return()=>{disposed=true;img.onload=null;observer.disconnect();visibility.disconnect();gsap.ticker.remove(tick);canvas.removeEventListener('webglcontextlost',onLost);if(texture)gl.deleteTexture(texture);if(buffer)gl.deleteBuffer(buffer);shaders.forEach(s=>gl.deleteShader(s));if(program)gl.deleteProgram(program);};
- },[src,reduced,speed,scale,illumination,surfaceDistortion,waterDistortion]);
+  const onLost=(event:Event)=>{event.preventDefault();lost=true;setReady(false);};
+  const onRestored=()=>{if(!disposed)setContextVersion(value=>value+1);};
+  canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',onRestored);
+  return()=>{disposed=true;img.onload=null;observer.disconnect();visibility.disconnect();gsap.ticker.remove(tick);canvas.removeEventListener('webglcontextlost',onLost);canvas.removeEventListener('webglcontextrestored',onRestored);if(texture)gl.deleteTexture(texture);if(buffer)gl.deleteBuffer(buffer);shaders.forEach(s=>gl.deleteShader(s));if(program)gl.deleteProgram(program);};
+ },[src,reduced,speed,scale,illumination,surfaceDistortion,waterDistortion,contextVersion]);
  return <div className={`ripple-image ${className}`}><img src={src} alt={alt} fetchPriority="high"/><canvas ref={canvasRef} aria-hidden="true" className={ready?'is-ready':''}/></div>;
 }
 export default WaterRippleImage;

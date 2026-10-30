@@ -33,7 +33,7 @@ async function footerLink(p, label) {
   const browser = await engines[engine].launch({headless:true, executablePath:engine==='chromium'?process.env.BROWSER_PATH || undefined:undefined});
   async function check(name, width, run) {
     if(cases.length && !cases.includes(name)) return;
-    const p = await browser.newPage({viewport:{width,height:900},hasTouch:width<768,isMobile:width<768});
+    const p = await browser.newPage({viewport:{width,height:900},hasTouch:width<768,isMobile:width<768,ignoreHTTPSErrors:base.startsWith('https://127.0.0.1:')});
     const errors = [];
     p.on('pageerror', e => errors.push(e.message));
     try {
@@ -86,13 +86,16 @@ async function footerLink(p, label) {
         await p.getByRole('region',{name:'Farm video tour',exact:true}).getByRole('button',{name:'Close Tour',exact:true}).click();
         await p.waitForFunction(()=>document.querySelector('.vinyl-stage').dataset.phase==='idle');
       });
-      for(const gate of ['canplaythrough','frame-callback','tap-permission']) {
+      for(const gate of ['canplaythrough','frame-callback','tap-permission','resource-load']) {
         await check(`tour-${gate}`,width,async p => {
           await p.addInitScript(gate => {
             if(gate==='canplaythrough') document.addEventListener('canplaythrough',e=>e.stopImmediatePropagation(),true);
             else if(gate==='frame-callback') {
               HTMLVideoElement.prototype.requestVideoFrameCallback = () => 1;
               HTMLVideoElement.prototype.cancelVideoFrameCallback = () => {};
+            }else if(gate==='resource-load'){
+              // WebKit can still report NETWORK_EMPTY while its first play is pending.
+              Object.defineProperty(HTMLMediaElement.prototype,'networkState',{get(){return 0;},configurable:true});
             }else{
               let directTap=false;
               document.addEventListener('click',()=>{directTap=true;setTimeout(()=>{directTap=false;},0);},true);
@@ -105,6 +108,7 @@ async function footerLink(p, label) {
               };
             }
           },gate);
+          if(gate==='resource-load')await p.route('**/*.mp4',async route=>{await new Promise(resolve=>setTimeout(resolve,150));await route.continue();});
           await p.goto(`${base}/vinyl-preview.html`,{waitUntil:'domcontentloaded'});
           const record=p.getByRole('button',{name:'Play the Farm villa tour',exact:true});
           if(width<768)await record.tap();else await record.click();

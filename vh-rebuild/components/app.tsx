@@ -93,7 +93,7 @@ export function App(){
    <div className="hero-viewport">
     <div className="hero-photo" ref={photo}><WaterRippleImage src={content.heroImage} alt={content.imageAlt} {...content.ripple}/></div>
     <div className="hero-shade"/>
-    <div className="title-mask"><h1 ref={title} aria-label={content.brand}><TextShimmer className="title-stack" textLength={10}>{titlePairs.map(([top,bottom],index)=><span className="letter-pair" key={`${top}-${bottom}-${index}`} aria-hidden="true"><span className="title-letter text-shimmer">{top}</span><span className="title-letter text-shimmer">{bottom}</span></span>)}</TextShimmer></h1></div>
+    <div className="title-mask"><h1 ref={title} aria-label={content.brand}><TextShimmer className="title-stack" textLength={10}>{titlePairs.map(([top,bottom],index)=><span className="letter-pair" key={`${top}-${bottom}-${index}`} aria-hidden="true"><span className="title-letter text-shimmer" data-letter={top}>{top}</span><span className="title-letter text-shimmer" data-letter={bottom}>{bottom}</span></span>)}</TextShimmer></h1></div>
     <button ref={cue} className="hero-discover-cue" aria-label="Scroll to Discover" onClick={()=>go(window.innerHeight*1.65)}><span className="hero-cue-text" aria-hidden="true">Scroll to Discover</span><span className="hero-cue-arrow" aria-hidden="true">↓</span></button>
    </div>
   </section><VinylScrollSection/></main>}<div className="footer-join" aria-hidden="true"/><SiteFooter onNotice={setNotice} onRules={()=>setRulesOpen(true)}/></div>

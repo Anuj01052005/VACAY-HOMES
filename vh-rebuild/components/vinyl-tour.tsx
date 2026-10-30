@@ -22,6 +22,7 @@ export function VinylTour() {
   const reduced=useReducedMotion();
   const id=useId().replaceAll(':','');
   const film=content.fullTour;
+  const [filmSource]=useState(()=>window.matchMedia('(min-width:768px)').matches?content.fullTour.desktop:content.fullTour.mobile);
 
   useLayoutEffect(()=>{
     const ctx=gsap.context(()=>{
@@ -49,7 +50,6 @@ export function VinylTour() {
     const failed=()=>{if(!cancelled)setPlaybackError(true);};
     element.addEventListener('error',failed);
     element.preload='auto';
-    if(element.networkState===HTMLMediaElement.NETWORK_EMPTY)element.load();
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')reset();};
     let resumeOnReturn=false;
     const visibility=()=>{
@@ -83,8 +83,7 @@ export function VinylTour() {
   const playFromTap=()=>{
     const element=video.current;if(!element)return;
     element.muted=true;element.defaultMuted=true;element.playsInline=true;
-    const source=window.matchMedia('(min-width:768px)').matches?film.desktop:film.mobile;
-    if(element.getAttribute('src')!==source||element.error){element.src=source;element.load();}
+    if(element.error)element.load();
     element.preload='auto';
     const request=element.play();playback.current=request;
     void request.then(()=>{if(playback.current===request)setPlaybackError(false);})
@@ -192,7 +191,7 @@ export function VinylTour() {
         </svg>
       </button>
       {<div className="vinyl-player" aria-hidden={phase!=='playing'} inert={phase!=='playing'} data-visible={phase==='playing'||undefined} role="region" aria-label="Farm video tour">
-        <div className="vinyl-video-frame"><video ref={video} muted loop playsInline preload="none" poster={film.poster} tabIndex={0} onPlaying={()=>setVideoPlaying(true)} onPause={()=>setVideoPlaying(false)} aria-label="Full Farm villa tour"><source src={film.desktop} media="(min-width:768px)" type="video/mp4"/><source src={film.mobile} type="video/mp4"/></video>
+        <div className="vinyl-video-frame"><video ref={video} src={filmSource} muted loop playsInline preload="metadata" poster={film.poster} tabIndex={0} onPlaying={()=>setVideoPlaying(true)} onPause={()=>setVideoPlaying(false)} aria-label="Full Farm villa tour"/>
           {phase==='playing'&&(!videoPlaying||playbackError)&&<div className="vinyl-recovery"><p role="status">{playbackError?'Your browser could not start the tour.':'Start your tour'}</p><button className="vinyl-invitation glass" onClick={()=>{setPlaybackError(false);playFromTap();setAttempt(value=>value+1);}}>Play tour</button><a className="vinyl-direct" href={film.mobile} target="_blank" rel="noopener noreferrer">Open video directly</a></div>}
         </div>
         <div className="vinyl-player-controls"><button className="vinyl-invitation glass silver-trace" onClick={reset} disabled={phase==='closing'}>Close Tour<span className="vinyl-invitation-light" aria-hidden="true"/></button></div>
