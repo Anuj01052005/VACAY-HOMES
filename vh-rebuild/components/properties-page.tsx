@@ -8,7 +8,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { FlipGallery } from './ui/flip-gallery';
-import { terracePhotos } from '@/terrace-photos';
+import { terraceCover, terracePhotos } from '@/terrace-photos';
 import '@/styles/flip-gallery.css';
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,10 +20,12 @@ export function PropertiesPage() {
 function TerracePage() {
   return (
     <main id="home" className="property-page terrace-gallery-page">
-      <header className="terrace-preview-heading">
-        <h1>Terrace</h1>
-      </header>
-      <FlipGallery photos={terracePhotos} label="Terrace photos" />
+      <div className="terrace-gallery-stage">
+        <header className="terrace-preview-heading">
+          <h1>Terrace</h1>
+        </header>
+        <FlipGallery photos={terracePhotos} label="Terrace photos" />
+      </div>
       <TerraceFeatures />
     </main>
   );
@@ -65,11 +67,10 @@ function PropertyOverview({ dedicated }: { dedicated: boolean }) {
       </article>
       <article id="vacay003" className="property-entry property-terrace">
         <a className="property-cover terrace-cover" href={content.terraceHref} aria-label="View Terrace gallery">
-          <img src={terracePhotos[0].url} alt={terracePhotos[0].alt} loading="lazy" />
+          <img src={terraceCover.url} alt={terraceCover.alt} loading="lazy" />
           <span className="property-id-badge glass">Terrace</span>
         </a>
         <TerraceFeatures />
-        <GlassLink href={content.terraceHref}>Explore Terrace</GlassLink>
       </article>
     </div>}
   </main>;

@@ -1,44 +1,35 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReducedMotion } from '../../hooks/use-reduced-motion';
-
-gsap.registerPlugin(ScrollTrigger);
 
 type Photo = { url: string; alt: string };
 type Direction = -1 | 1;
-const scrollStep = 152;
+const gesturePause = 160;
 
 export function FlipGallery({ photos, label }: { photos: readonly Photo[]; label: string }) {
   const [index, setIndex] = useState(0);
-  const track = useRef<HTMLElement>(null);
-  const dock = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLButtonElement>(null);
-  const topFlap = useRef<HTMLSpanElement>(null);
-  const bottomFlap = useRef<HTMLSpanElement>(null);
-  const timeline = useRef<gsap.core.Timeline | null>(null);
+  const flap = useRef<HTMLSpanElement>(null);
+  const animation = useRef<gsap.core.Tween | null>(null);
   const current = useRef(0);
-  const target = useRef(0);
-  const direction = useRef<Direction>(1);
   const reduced = useReducedMotion();
+  const last = photos.length - 1;
 
-  const animateToTarget = useCallback(function advance() {
+  const turn = useCallback((next: number, direction: Direction) => {
     const stage = frame.current;
-    const top = topFlap.current;
-    const bottom = bottomFlap.current;
-    if (!stage || !top || !bottom || timeline.current || current.current === target.current) return;
-
+    const hinge = flap.current;
     const from = current.current;
-    const to = target.current;
-    const photo = (position: number) => `url("${photos[position].url}")`;
-    const setFace = (side: string, position: number) => {
-      stage.style.setProperty(`--flip-${side}`, photo(position));
-    };
+    if (!stage || !hinge || animation.current || next === from || !photos[next]) return;
+
+    const source = (position: number) => `url("${photos[position].url}")`;
     const finish = () => {
-      setFace('top', to);
-      setFace('bottom', to);
-      current.current = to;
-      setIndex(to);
+      stage.style.setProperty('--flip-top', source(next));
+      stage.style.setProperty('--flip-bottom', source(next));
+      delete stage.dataset.turn;
+      hinge.style.visibility = 'hidden';
+      current.current = next;
+      setIndex(next);
+      animation.current = null;
     };
 
     if (reduced) {
@@ -46,112 +37,146 @@ export function FlipGallery({ photos, label }: { photos: readonly Photo[]; label
       return;
     }
 
-    const forward = direction.current === 1;
-    const outgoing = forward ? top : bottom;
-    const incoming = forward ? bottom : top;
-    setFace('top', forward ? to : from);
-    setFace('bottom', forward ? from : to);
-    setFace('top-flap', forward ? from : to);
-    setFace('bottom-flap', forward ? to : from);
-
-    gsap.set(outgoing, { rotationX: 0, autoAlpha: 1, force3D: true });
-    gsap.set(incoming, { rotationX: forward ? 90 : -90, autoAlpha: 0, force3D: true });
-
-    timeline.current = gsap.timeline({
-      defaults: { duration: 0.32 },
-      onComplete: () => {
-        finish();
-        gsap.set([top, bottom], { autoAlpha: 0 });
-        timeline.current = null;
-        advance();
-      },
-    })
-      .to(outgoing, { rotationX: forward ? -90 : 90, ease: 'sine.in' })
-      .set(outgoing, { autoAlpha: 0 })
-      .set(incoming, { autoAlpha: 1 })
-      .to(incoming, { rotationX: 0, ease: 'sine.out' });
+    const forward = direction === 1;
+    stage.style.setProperty('--flip-top', source(forward ? next : from));
+    stage.style.setProperty('--flip-bottom', source(forward ? from : next));
+    stage.style.setProperty('--flip-front', source(from));
+    stage.style.setProperty('--flip-back', source(next));
+    stage.dataset.turn = forward ? 'forward' : 'backward';
+    const perspective = Number.parseFloat(getComputedStyle(stage).getPropertyValue('--flip-depth'));
+    gsap.set(hinge, { rotationX: 0, transformPerspective: perspective, visibility: 'visible' });
+    animation.current = gsap.to(hinge, {
+      rotationX: forward ? -180 : 180,
+      duration: .68,
+      ease: 'power2.inOut',
+      onComplete: finish,
+    });
   }, [photos, reduced]);
 
-  const move = useCallback((offset: number) => {
-    if (photos.length < 2 || !offset) return;
-    direction.current = offset > 0 ? 1 : -1;
-    target.current = ((target.current + offset) % photos.length + photos.length) % photos.length;
-    animateToTarget();
-  }, [animateToTarget, photos.length]);
+  const step = useCallback((direction: Direction) => {
+    turn(Math.max(0, Math.min(last, current.current + direction)), direction);
+  }, [last, turn]);
 
   useEffect(() => {
-    const preload = photos.map(({ url }) => {
+    for (const { url } of photos) {
       const image = new Image();
       image.src = url;
       void image.decode().catch(() => {});
-      return image;
-    });
-    return () => { preload.length = 0; };
+    }
+    return () => { animation.current?.kill(); animation.current = null; };
   }, [photos]);
 
-  useLayoutEffect(() => {
-    const section = track.current;
-    const sticky = dock.current;
-    if (!section || !sticky || photos.length < 2) return;
-    let step = 0;
+  useEffect(() => {
+    if (last < 1) return;
+    let wheelAt = -Infinity;
+    let heldWheel = false;
+    let wheelTurned = false;
+    let wheelDelta = 0;
+    let touch: { y: number; handled: boolean } | undefined;
 
-    const trigger = ScrollTrigger.create({
-      trigger: section,
-      start: () => `top top+=${Number.parseFloat(getComputedStyle(sticky).top)}`,
-      end: () => `+=${section.offsetHeight - sticky.offsetHeight}`,
-      onRefresh: (self) => { step = Math.floor(self.progress * (photos.length - 1) + .001); },
-      onUpdate: (self) => {
-        const next = Math.floor(self.progress * (photos.length - 1) + .001);
-        const delta = next - step;
-        step = next;
-        move(delta);
-      },
-    });
-
-    return () => {
-      trigger.kill();
-      timeline.current?.kill();
-      timeline.current = null;
-      if (frame.current) {
-        const source = `url("${photos[current.current].url}")`;
-        frame.current.style.setProperty('--flip-top', source);
-        frame.current.style.setProperty('--flip-bottom', source);
-      }
-      gsap.set([topFlap.current, bottomFlap.current].filter(Boolean), { autoAlpha: 0 });
-      target.current = current.current;
+    const atTop = () => window.scrollY <= 2;
+    const canBrowse = (target: EventTarget | null) =>
+      atTop() && !document.querySelector('dialog[open], [role="dialog"][data-state="open"]') &&
+      !(target instanceof Element && target.closest('input, textarea, select, [contenteditable], [role="menu"]'));
+    const consume = (event: Event) => {
+      if (!event.cancelable) return false;
+      event.preventDefault();
+      // Lenis also listens on the window. Keep this gesture with the gallery.
+      event.stopImmediatePropagation();
+      return true;
     };
-  }, [move, photos]);
 
-  if (!photos.length) return null;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.deltaY || event.ctrlKey || event.metaKey || !canBrowse(event.target)) return;
+      const now = performance.now();
+      if (now - wheelAt > gesturePause) {
+        heldWheel = false;
+        wheelTurned = false;
+        wheelDelta = 0;
+      }
+      wheelAt = now;
+      if (event.deltaY > 0 && current.current === last && !animation.current && !heldWheel) return;
+      if (!consume(event)) return;
+      wheelDelta += event.deltaY * (event.deltaMode === 1 ? 16 : 1);
+      if (!wheelTurned && Math.abs(wheelDelta) >= 12) {
+        step(wheelDelta > 0 ? 1 : -1);
+        wheelTurned = true;
+      }
+      heldWheel = true;
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      touch = event.touches.length === 1 && canBrowse(event.target)
+        ? { y: event.touches[0].clientY, handled: false } : undefined;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (!touch || event.touches.length !== 1) return;
+      const distance = touch.y - event.touches[0].clientY;
+      if (!touch.handled && distance > 0 && current.current === last && !animation.current) {
+        touch = undefined;
+        return;
+      }
+      if (consume(event) && !touch.handled && Math.abs(distance) >= 28) {
+        touch.handled = true;
+        step(distance > 0 ? 1 : -1);
+      }
+    };
+    const resetTouch = () => { touch = undefined; };
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || !canBrowse(event.target)) return;
+      const forward = event.key === 'ArrowDown' || event.key === 'PageDown' ||
+        (event.key === ' ' && !event.shiftKey && !(event.target instanceof HTMLElement && event.target.closest('button, a')));
+      const backward = event.key === 'ArrowUp' || event.key === 'PageUp';
+      if (!forward && !backward) return;
+      if (forward && current.current === last && !animation.current && !event.repeat) return;
+      event.preventDefault();
+      if (!event.repeat) step(forward ? 1 : -1);
+    };
+
+    window.addEventListener('wheel', onWheel, { capture: true, passive: false });
+    window.addEventListener('touchstart', onTouchStart, { capture: true, passive: true });
+    window.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+    window.addEventListener('touchend', resetTouch, true);
+    window.addEventListener('touchcancel', resetTouch, true);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('wheel', onWheel, true);
+      window.removeEventListener('touchstart', onTouchStart, true);
+      window.removeEventListener('touchmove', onTouchMove, true);
+      window.removeEventListener('touchend', resetTouch, true);
+      window.removeEventListener('touchcancel', resetTouch, true);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [last, step]);
+
   const selected = photos[index];
+  if (!selected) return null;
 
   return (
-    <section
-      ref={track}
-      className="flip-track"
-      aria-label={label}
-      style={{ paddingBottom: Math.max(0, photos.length - 1) * scrollStep }}
-    >
-      <div ref={dock} className="flip-dock">
-        <button
-          className="flip-frame"
-          ref={frame}
-          aria-label={`Next photo. Current photo: ${selected.alt}`}
-          type="button"
-          onClick={() => move(1)}
-          onKeyDown={(event) => {
-            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-            event.preventDefault();
-            move(event.key === 'ArrowRight' ? 1 : -1);
-          }}
-          style={{ backgroundImage: `url("${photos[0].url}")` }}
-        >
-          <span aria-hidden="true" className="flip-face flip-top" />
-          <span aria-hidden="true" className="flip-face flip-bottom" />
-          <span aria-hidden="true" className="flip-face flip-top flip-top-flap" ref={topFlap} />
-          <span aria-hidden="true" className="flip-face flip-bottom flip-bottom-flap" ref={bottomFlap} />
-        </button>
-      </div>
+    <section className="flip-track" aria-label={label}>
+      <button
+        className="flip-frame"
+        ref={frame}
+        aria-label={`Current photo: ${selected.alt}`}
+        type="button"
+        onClick={() => turn(current.current === last ? 0 : current.current + 1, 1)}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          step(event.key === 'ArrowRight' ? 1 : -1);
+        }}
+        style={{ backgroundImage: `url("${photos[0].url}")` }}
+      >
+        <span aria-hidden="true" className="flip-stage">
+          <span className="flip-face flip-top" />
+          <span className="flip-face flip-bottom" />
+          <span className="flip-hinge" ref={flap}>
+            <span className="flip-face flip-front" />
+            <span className="flip-face flip-back" />
+          </span>
+        </span>
+      </button>
     </section>
   );
 }
