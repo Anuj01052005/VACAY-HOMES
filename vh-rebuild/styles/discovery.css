@@ -73,7 +73,7 @@
 .property-page-header {padding-block: var(--discovery-gap)}
 .property-page-header p {margin: 0 0 var(--space-md); color: var(--gallery-muted); font-size: var(--gallery-caption); letter-spacing: .08em}
 .property-page-header h1 {position: static; margin: 0; text-align: left; font: 400 var(--property-page-heading)/1 var(--font-display); letter-spacing: -.04em}
-.property-grid {display: grid; gap: var(--property-grid-gap)}
+.property-grid {display: grid; gap: calc(var(--property-grid-gap) + 12px)}
 .property-entry {min-width: 0}
 .property-cover {position: relative; aspect-ratio: 1.15; border-radius: var(--gallery-radius); overflow: hidden; background: var(--surface)}
 .property-cover img {display: block; width: 100%; height: 100%; object-fit: cover}

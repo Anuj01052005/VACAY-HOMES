@@ -63,6 +63,7 @@
 @media(prefers-reduced-motion:reduce){.vacay-footer .bwf-wash{animation:none}}
 .vacay-footer .bwf-l {mask-image:linear-gradient(to bottom,#000 35%,rgba(0,0,0,.7) 65%,transparent 98%);-webkit-mask-image:linear-gradient(to bottom,#000 35%,rgba(0,0,0,.7) 65%,transparent 98%)}
 .page-surface:has(.property-page) .property-page {padding-bottom:120px}
+.page-surface .property-page:has(> .property-grid) {padding-bottom:108px}
 .page-surface:has(.property-page) .footer-join {position:relative;margin-top:-100px;height:160px;background:linear-gradient(to bottom,transparent,#08090f 88%)}
 .rules-dialog {position:fixed;inset:0;margin:auto;width:min(640px,calc(100% - 28px));max-height:calc(100svh - 40px);padding:24px;border-radius:24px;color:var(--foreground);background:rgba(12,16,25,.92);border:1px solid rgba(230,230,250,.15);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);overflow:hidden}
 .rules-dialog::backdrop {background:rgba(0,0,0,.65);backdrop-filter:blur(8px)}
