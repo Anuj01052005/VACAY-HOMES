@@ -1,0 +1,151 @@
+.terrace-gallery-preview,
+.property-page.terrace-gallery-page {
+  --gallery-width: min(100%, 1080px, 110svh);
+  padding-inline: clamp(18px, 5vw, 48px);
+}
+
+.terrace-gallery-preview {
+  min-height: 100svh;
+  padding-block: clamp(28px, 5svh, 54px) 4svh;
+  background: var(--residence-gradient);
+  position: relative;
+  isolation: isolate;
+}
+
+.terrace-gallery-preview::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--residence-gradient);
+}
+
+.terrace-preview-heading,
+.terrace-gallery-preview .flip-track,
+.terrace-gallery-page .flip-track,
+.terrace-gallery-page .property-confirmed-features {
+  width: var(--gallery-width);
+  margin-inline: auto;
+}
+
+.terrace-preview-heading h1 {
+  position: static;
+  text-align: left;
+  font: 400 clamp(52px, 9vw, 94px)/.96 var(--font-display);
+  letter-spacing: -.045em;
+}
+
+.terrace-preview-heading {
+  margin-bottom: clamp(20px, 4vw, 34px);
+}
+
+.property-page.terrace-gallery-page {
+  --terrace-nav-clearance: calc(max(var(--nav-top), env(safe-area-inset-top)) + var(--nav-height) + 20px);
+  max-width: none;
+  padding-top: calc(var(--terrace-nav-clearance) + 12px);
+}
+
+.terrace-gallery-page .flip-dock {
+  --flip-sticky-top: var(--terrace-nav-clearance);
+}
+
+.terrace-gallery-page .property-confirmed-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-block: var(--space-md) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.property-terrace {
+  scroll-margin-top: calc(var(--nav-top) + var(--nav-height) + 20px);
+}
+
+.terrace-cover {
+  display: block;
+}
+
+.property-terrace > .glass-action {
+  width: fit-content;
+  margin: var(--space-md) auto 0;
+}
+
+.flip-dock {
+  --flip-sticky-top: clamp(16px, 4svh, 40px);
+  position: sticky;
+  top: var(--flip-sticky-top);
+}
+
+.terrace-gallery-preview .flip-dock {
+  min-height: calc(100svh - var(--flip-sticky-top));
+}
+
+.flip-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  perspective: 1150px;
+  isolation: isolate;
+  box-shadow: 0 18px 42px rgb(0 0 0 / .24);
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .terrace-gallery-preview,
+  .property-page.terrace-gallery-page {
+    --gallery-width: min(100%, 59svh);
+  }
+
+  .flip-frame {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+.flip-face {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+
+.flip-face::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: var(--flip-photo);
+  background-size: cover;
+  background-position: center;
+}
+
+.flip-top, .flip-top::before { top: 0; }
+.flip-bottom, .flip-bottom::before { bottom: 0; }
+.flip-top { --flip-photo: var(--flip-top); transform-origin: center bottom; }
+.flip-bottom { --flip-photo: var(--flip-bottom); transform-origin: center top; }
+.flip-top-flap { --flip-photo: var(--flip-top-flap); }
+.flip-bottom-flap { --flip-photo: var(--flip-bottom-flap); }
+
+.flip-top-flap, .flip-bottom-flap {
+  visibility: hidden;
+  z-index: 1;
+}
+
+.flip-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: calc(50% - .5px) 0 auto;
+  height: 1px;
+  background: rgb(0 0 0 / .38);
+  pointer-events: none;
+}

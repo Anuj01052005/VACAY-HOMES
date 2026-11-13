@@ -156,7 +156,9 @@ async function footerLink(p, label) {
           await p.goto(`${base}/${label==='Dining'?'':'?page=dining'}`,{waitUntil:'domcontentloaded'});
           await footer(p); await scroll(p,90); await footerLink(p,label);
           if(label==='Terrace') {
-            const position=await p.evaluate(()=>({text:document.querySelector('.reveal-property').getBoundingClientRect().top,nav:document.querySelector('.navigation').getBoundingClientRect().bottom}));
+            assert.equal(new URL(p.url()).searchParams.get('property'),'003');
+            assert.equal(await p.locator('h1').innerText(),'Terrace');
+            const position=await p.evaluate(()=>({text:document.querySelector('h1').getBoundingClientRect().top,nav:document.querySelector('.navigation').getBoundingClientRect().bottom}));
             assert.ok(position.text>position.nav+4,`Terrace heading is beneath navigation: ${JSON.stringify(position)}`);
           } else {
             assert.ok(await p.evaluate(()=>scrollY<8),`${label} must arrive at the top, not the footer`);

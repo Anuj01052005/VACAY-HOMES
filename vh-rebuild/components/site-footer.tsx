@@ -11,7 +11,7 @@ export function SiteFooter({onNotice,onRules}:{onNotice:(message:string)=>void;o
     fontSans="var(--font-interface)" wordWeight={650} cut={.08}
     credits={[{label:'A villa outside Bengaluru.'},{label:'For stays, gatherings and time together.'}]}
     columns={[
-      {title:'Our page',links:[{label:'Home',href:'./#home'},{label:'Villa tour',href:'./#discover'},{label:'Properties',href:'./?page=properties'},{label:'Farm',href:'./?page=properties&property=002'},{label:'Terrace',href:'./?page=properties#vacay003'},{label:'Dining',href:'./?page=dining'},{label:'Rules'}]},
+      {title:'Our page',links:[{label:'Home',href:'./#home'},{label:'Villa tour',href:'./#discover'},{label:'Properties',href:'./?page=properties'},{label:'Farm',href:'./?page=properties&property=002'},{label:'Terrace',href:content.terraceHref},{label:'Dining',href:'./?page=dining'},{label:'Rules'}]},
       {title:'Explore Farm',links:[...content.property002Films.map(f=>({label:f.label,href:`./?page=properties&property=002#${f.id}`})),{label:'Location',href:content.property002Location}]},
     ]}
     onLinkClick={(label,href)=>{if(label==='Rules')onRules();else if(!href&&label==='Dining')onNotice('Dining is being prepared.')}}

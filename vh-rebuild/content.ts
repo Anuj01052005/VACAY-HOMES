@@ -1,4 +1,7 @@
+const terraceHref = '?page=properties&property=003';
+
 export const content = {
+  terraceHref,
   brand: 'Vacay Homes',
   heroImage: './assets/pool-hero.webp',
   imageAlt: 'The illuminated pool at VACAY HOMES, framed by the terrace, with wicker chairs and palms under the night sky.',
@@ -7,8 +10,7 @@ export const content = {
   footer: {email:'askvacaytion@gmail.com',instagramUrl:'https://www.instagram.com/vacayhomes.in/'},
   property002Location:'https://maps.app.goo.gl/Jw37pZzZLH6zMia4A?g_st=ic',
   property003Features:['3 BHK','Terrace','Jacuzzi','Pool table'],
-  property003Reveal: {target:'2026-11-20T00:00:00+05:30',label:'Planned reveal',dateLabel:'20 November 2026'},
-  menu: [{label:'Farm',href:'?page=properties&property=002'},{label:'Terrace',href:'?page=properties#vacay003'},{label:'Dining',href:'?page=dining'}],
+  menu: [{label:'Farm',href:'?page=properties&property=002'},{label:'Terrace',href:terraceHref},{label:'Dining',href:'?page=dining'}],
   seasonalMessage: '',
   ripple: {speed:0.45,scale:7,illumination:0.04,surfaceDistortion:0.018,waterDistortion:0.012},
   propertiesButton: 'Properties',

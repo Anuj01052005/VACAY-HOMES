@@ -46,7 +46,11 @@ export function App(){
   window.addEventListener('resize',updateNavigation);
   return()=>{window.removeEventListener('scroll',updateNavigation);window.removeEventListener('resize',updateNavigation);};
  },[route,locationKey]);
- useEffect(()=>{document.title=diningPage?'Buffet Menu — Vacay Homes':propertiesPage?(new URLSearchParams(location.search).get('property')==='002'?'Farm':'Properties — Vacay Homes'):'Vacay Homes — Farm';},[route,propertiesPage]);
+ const property = query.get('property');
+ useEffect(()=>{
+  const propertyTitle = property === '002' ? 'Farm' : property === '003' ? 'Terrace — Vacay Homes' : 'Properties — Vacay Homes';
+  document.title = diningPage ? 'Buffet Menu — Vacay Homes' : propertiesPage ? propertyTitle : 'Vacay Homes — Farm';
+ },[diningPage,propertiesPage,property]);
  const titlePairs=[['V','H'],['A','O'],['C','M'],['A','E'],['Y','S']];
  useLayoutEffect(()=>{
   if(innerPage){gsap.killTweensOf(navigation.current);gsap.set(navigation.current,{autoAlpha:1,y:0});return;}

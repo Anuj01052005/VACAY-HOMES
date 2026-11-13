@@ -3,15 +3,43 @@ import { SwipeCards } from './ui/image-stack-carousel';
 import { GlassLink } from './ui/glass-action';
 import { SilverTrace } from './ui/silver-trace';
 import { FeatureVideo } from './feature-video';
-import { VaporCountdown } from './ui/countdown-vapor-digits';
 import { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { FlipGallery } from './ui/flip-gallery';
+import { terracePhotos } from '@/terrace-photos';
+import '@/styles/flip-gallery.css';
 gsap.registerPlugin(ScrollTrigger);
 
 export function PropertiesPage() {
-  const dedicated=new URLSearchParams(window.location.search).get('property')==='002';
+  const property = new URLSearchParams(window.location.search).get('property');
+  return property === '003' ? <TerracePage /> : <PropertyOverview dedicated={property === '002'} />;
+}
+
+function TerracePage() {
+  return (
+    <main id="home" className="property-page terrace-gallery-page">
+      <header className="terrace-preview-heading">
+        <h1>Terrace</h1>
+      </header>
+      <FlipGallery photos={terracePhotos} label="Terrace photos" />
+      <TerraceFeatures />
+    </main>
+  );
+}
+
+function TerraceFeatures() {
+  return (
+    <ul className="property-confirmed-features" aria-label="Terrace features">
+      {content.property003Features.map(feature => (
+        <li key={feature}><span className="glass glass-action silver-trace">{feature}<SilverTrace /></span></li>
+      ))}
+    </ul>
+  );
+}
+
+function PropertyOverview({ dedicated }: { dedicated: boolean }) {
   const opening=useRef<HTMLDivElement>(null);
   const reduced=useReducedMotion();
   useLayoutEffect(()=>{
@@ -35,10 +63,13 @@ export function PropertiesPage() {
         <div className="property-carousel"><SwipeCards cards={content.gallery.map(card=>({...card,tag:"Farm"}))}/></div>
         <FeatureLinks/>
       </article>
-      <article id="vacay003" className="property-entry property-coming">
-        <div className="property-cover coming-cover reveal-card"><div className="reveal-card-content"><span className="reveal-property">Terrace</span><p>{content.property003Reveal.label}</p><VaporCountdown targetDate={content.property003Reveal.target}/><p className="reveal-date">{content.property003Reveal.dateLabel} · tentative</p></div></div>
-        <ul className="property-confirmed-features" aria-label="Terrace features">{content.property003Features.map(feature=><li key={feature}><span className="glass glass-action silver-trace">{feature}<SilverTrace/></span></li>)}</ul>
-        <p className="coming-note">Coming soon</p>
+      <article id="vacay003" className="property-entry property-terrace">
+        <a className="property-cover terrace-cover" href={content.terraceHref} aria-label="View Terrace gallery">
+          <img src={terracePhotos[0].url} alt={terracePhotos[0].alt} loading="lazy" />
+          <span className="property-id-badge glass">Terrace</span>
+        </a>
+        <TerraceFeatures />
+        <GlassLink href={content.terraceHref}>Explore Terrace</GlassLink>
       </article>
     </div>}
   </main>;
